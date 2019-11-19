@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -19,7 +19,6 @@
         var Enemies = new Array();
         var Pbullet = new Array();
         var Ebullet = new Array();
-        var bullet = new Array();
         Objects.push(Player);
 
         var numBalls = 10;
@@ -46,7 +45,7 @@
             tempSpeed = 5;
 
             tempBall = { type: "etc", x: tempX, y: tempY, angle: tempAngle, xunits: tempXunits, yunits: tempYunits, size: tempSize, speed: tempSpeed ,bs:0}
-            bullet.push(tempBall);
+            Ebullet.push(tempBall);
         }
 
         setInterval(update, deltaTime);
@@ -86,34 +85,26 @@
                         ball.x += dx * ball.speed * deltaTime;
                         ball.y += dy * ball.speed * deltaTime;
                     }
-                    Context.beginPath();
-                    Context.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
-                    Context.closePath();
-                    Context.fill();
+                    drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
                 }
                 else if (ball.type == "etc")
                 {
                     updateBall(ball);
-                    Context.beginPath();
-                    Context.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
-                    Context.closePath();
-                    Context.fill();
+                    drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
                 }
             }
             
-            ball = bullet[0];
-            gobullet(ball,i);
-            Context.beginPath();
-            Context.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
-            Context.closePath();
-            Context.fill();
+            ball = Ebullet[0];
+            goSinbullet(ball, i);
+            drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
         
         }
-        function gobullet(ball,i)
+        function goSinbullet(ball,i)
         {
-            ball.x++;
-            ball.y = ball.yunits+Math.sin(ball.bs*0.1*Math.PI)*10;
-            ball.bs++;;
+            ball.speed = 20;
+            ball.x += ball.speed * deltaTime;
+            ball.y = ball.yunits + Math.sin(ball.bs * 0.1 * Math.PI) * 10;
+            ball.bs += ball.speed * deltaTime;
             if(ball.x>Canvas.width-1||ball.y>Canvas.height-1)
             {
                 ball.x = ball.xunits;
@@ -173,7 +164,20 @@
                 Player.dx = 0;
             }
         }
+
+        function drawCircle(x, y, r, sa, ea, f) {
+            Context.beginPath();
+            Context.arc(x, y, r, sa, ea, true);
+            Context.closePath();
+            if (f == true) {
+                Context.fill();
+            }
+            else {
+                Context.stroke();
+            }
+        }
     }
+
 </script>
 
 </head>
