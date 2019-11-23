@@ -1,0 +1,191 @@
+﻿<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script type="text/javascript">
+    window.addEventListener('load', init, false);
+    function init()
+    {
+        //document.addEventListener('keypress', onKeyPressFunc(event), false);
+        document.onkeydown = onKeyDownFunc;
+        document.onkeyup = onKeyUpFunc;
+        var Canvas = document.getElementById('canvas');
+        var Context = Canvas.getContext('2d');
+        var frame = 60;
+        var deltaTime = 1 / frame;
+
+        var Objects = new Array();
+        var Player = { type: "player", x: 400, y: 300, angle: 0, speed: 50, size: 5, dx: 0, dy: 0 };
+        var Enemies = new Array();
+        var Pbullet = new Array();
+        var Ebullet = new Array();
+        Objects.push(Player);
+
+        var numBalls = 10;
+        var tempBall;
+        var tempX;
+        var tempY;
+        var tempAngle;
+        var tempRadians;
+        var tempXunits;
+        var tempYunits;
+        var tempSize;
+        var tempSpeed;
+        
+
+        for (var i = 0; i < numBalls; i++)
+        {
+            tempX = 100;
+            tempY = 100;
+            tempAngle = Math.floor(Math.random() * 360);
+            tempRadians = tempAngle * Math.PI / 180;
+            tempXunits = 100;
+            tempYunits = 100;
+            tempSize = 5;
+            tempSpeed = 5;
+
+            tempBall = { type: "etc", x: tempX, y: tempY, angle: tempAngle, xunits: tempXunits, yunits: tempYunits, size: tempSize, speed: tempSpeed ,bs:0}
+            Ebullet.push(tempBall);
+        }
+
+        setInterval(update, deltaTime);
+        function update()
+        {
+            draw();
+            //collision
+            //stat
+        }
+
+        function draw()
+        {
+            //Canvas
+            Context.fillStyle = '#CCCCCC';
+            Context.fillRect(0, 0, Canvas.width, Canvas.height);
+            //Box
+            Context.strokeStyle = '#000000';
+            Context.strokeRect(1, 1, Canvas.width - 2, Canvas.height - 2);
+
+            //Place balls
+            Context.fillStyle = "#000000";
+            var ball;
+            var n=0;
+            for (var i = 0; i < 1; i++)
+            {
+                ball = Objects[i];
+                if (ball.type == "player")
+                {
+                    if (ball.dx != 0 || ball.dy != 0)
+                    {
+                        if (Player.dx > 1) Player.dx = 1;
+                        if (Player.dy < -1) Player.dx = -1;
+                        if (Player.dy > 1) Player.dy = 1;
+                        if (Player.dy < -1) Player.dy = -1;
+                        var dx = ball.dx / Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
+                        var dy = ball.dy / Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
+                        ball.x += dx * ball.speed * deltaTime;
+                        ball.y += dy * ball.speed * deltaTime;
+                    }
+                    drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
+                }
+                else if (ball.type == "etc")
+                {
+                    updateBall(ball);
+                    drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
+                }
+            }
+            
+            ball = Ebullet[0];
+            goSinbullet(ball, i);
+            drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
+        
+        }
+        function goSinbullet(ball,i)
+        {
+            ball.speed = 20;
+            ball.x += ball.speed * deltaTime;
+            ball.y = ball.yunits + Math.sin(ball.bs * 0.1 * Math.PI) * 10;
+            ball.bs += ball.speed * deltaTime;
+            if(ball.x>Canvas.width-1||ball.y>Canvas.height-1)
+            {
+                ball.x = ball.xunits;
+                ball.y = ball.yunits;
+            }
+        }
+        function updateBall(ball)
+        {
+            ball.radians = ball.angle * Math.PI / 180;
+            ball.xunits = Math.cos(ball.radians);
+            ball.yunits = Math.sin(ball.radians);
+        }
+
+        function onKeyDownFunc(e)
+        {
+            e.stopPropagation();
+            //alert(Player.dy);
+            if (e.keyCode == 87 && Player.dy > -1)   //W
+            {
+                Player.dy--;
+                if (Player.dy == 0) setTimeout(onKeyDownFunc(e), 1);
+            }
+            if (e.keyCode == 65 && Player.dx > -1)    //A
+            {
+                Player.dx--;
+                if (Player.dx == 0) setTimeout(onKeyDownFunc(e), 1);
+            }
+            if (e.keyCode == 83 && Player.dy < 1)   //S
+            {
+                Player.dy++;
+                if (Player.dy == 0) setTimeout(onKeyDownFunc(e), 1);
+            }
+            if (e.keyCode == 68 && Player.dx < 1)   //D
+            {
+                Player.dx++;
+                if (Player.dx == 0) setTimeout(onKeyDownFunc(e), 1);
+            }
+        }
+        function onKeyUpFunc(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            //alert(e.keyCode);
+            if (e.keyCode == 87 && Player.dy < 1)   //W
+            {
+                Player.dy = 0;
+            }
+            if (e.keyCode == 65 && Player.dx < 1)    //A
+            {
+                Player.dx = 0;
+            }
+            if (e.keyCode == 83 && Player.dy > -1)   //S
+            {
+                Player.dy = 0;
+            }
+            if (e.keyCode == 68 && Player.dx > -1)   //D
+            {
+                Player.dx = 0;
+            }
+        }
+
+        function drawCircle(x, y, r, sa, ea, f) {
+            Context.beginPath();
+            Context.arc(x, y, r, sa, ea, true);
+            Context.closePath();
+            if (f == true) {
+                Context.fill();
+            }
+            else {
+                Context.stroke();
+            }
+        }
+    }
+
+</script>
+
+</head>
+<body bgColor="black">
+    <div style="position: absolute; top: 50px; left: 50px;">
+        <canvas id="canvas" width="800" height="600">
+            Your browser does not support the HTML 5 Canvas.
+        </canvas>
+    </div>
+</body>
+</html>

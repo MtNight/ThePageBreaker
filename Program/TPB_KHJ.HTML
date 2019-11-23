@@ -1,8 +1,8 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
 <head>
-<meta charset="UTF-8">
-<script type="text/javascript">
+    <meta charset="UTF-8">
+    <script type="text/javascript">
     window.addEventListener('load', init, false);
     function init()
     {
@@ -16,11 +16,10 @@
 
         var Objects = new Array();
         var Player = { type: "player", x: 400, y: 300, angle: 0, speed: 50, size: 5, dx: 0, dy: 0 };
+        var Cursor = { type: "player", x: 400, y: 300, angle: 0, size: 5}
         var Enemies = new Array();
         var Pbullet = new Array();
         var Ebullet = new Array();
-
-        Objects.push(Player);
 
         var numBalls = 10;
         var tempBall;
@@ -32,20 +31,19 @@
         var tempYunits;
         var tempSize;
         var tempSpeed;
-
         for (var i = 0; i < numBalls; i++)
         {
-            tempX = 30 + (Math.floor(Math.random() * Canvas.width) - 30);
-            tempY = 30 + (Math.floor(Math.random() * Canvas.height) - 30);
+            tempX = 100;
+            tempY = 100;
             tempAngle = Math.floor(Math.random() * 360);
             tempRadians = tempAngle * Math.PI / 180;
-            tempXunits = Math.cos(tempRadians);
-            tempYunits = Math.sin(tempRadians);
-            tempSize = Math.floor(Math.random() * 10 + 5);
-            tempSpeed = Math.floor(Math.random() * 20 / tempSize) + 30;
+            tempXunits = 100;
+            tempYunits = 100;
+            tempSize = 5;
+            tempSpeed = 5;
 
-            tempBall = { type: "etc", x: tempX, y: tempY, angle: tempAngle, xunits: tempXunits, yunits: tempYunits, size: tempSize, speed: tempSpeed }
-            Objects.push(tempBall);
+            tempBall = { type: "etc", x: tempX, y: tempY, angle: tempAngle, xunits: tempXunits, yunits: tempYunits, size: tempSize, speed: tempSpeed, bs:0}
+            Ebullet.push(tempBall);
         }
 
         setInterval(update, deltaTime);
@@ -65,49 +63,47 @@
             Context.strokeStyle = '#000000';
             Context.strokeRect(1, 1, Canvas.width - 2, Canvas.height - 2);
 
-            //Place balls
             Context.fillStyle = "#000000";
+            //Player
+            if (Player.dx != 0 || Player.dy != 0) {
+                if (Player.dx > 1) Player.dx = 1;
+                if (Player.dy < -1) Player.dx = -1;
+                if (Player.dy > 1) Player.dy = 1;
+                if (Player.dy < -1) Player.dy = -1;
+                var dx = Player.dx / Math.sqrt(Player.dx * Player.dx + Player.dy * Player.dy);
+                var dy = Player.dy / Math.sqrt(Player.dx * Player.dx + Player.dy * Player.dy);
+                Player.x += dx * Player.speed * deltaTime;
+                Player.y += dy * Player.speed * deltaTime;
+            }
+            drawCircle(Player.x, Player.y, Player.size, 0, Math.PI * 2, true);
+
+            //Enemy
+
+            //Bullets
+            ball = Ebullet[0];
+            goSinbullet(ball);
+            drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
+
+            //etc
             var ball;
-
-            for (var i = 0; i < Objects.length; i++)
+            for (var i = 1; i < 1; i++)
             {
-                ball = Objects[i];
-                if (ball.type == "player")
-                {
-                    if (ball.dx != 0 || ball.dy != 0)
-                    {
-                        if (Player.dx > 1) Player.dx = 1;
-                        if (Player.dy < -1) Player.dx = -1;
-                        if (Player.dy > 1) Player.dy = 1;
-                        if (Player.dy < -1) Player.dy = -1;
-                        var dx = ball.dx / Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
-                        var dy = ball.dy / Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
-                        ball.x += dx * ball.speed * deltaTime;
-                        ball.y += dy * ball.speed * deltaTime;
-                    }
-                    Context.beginPath();
-                    Context.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
-                    Context.closePath();
-                    Context.fill();
-                }
-                else if (ball.type == "etc")
-                {
-                    ball.x += ball.xunits * ball.speed * deltaTime;
-                    ball.y += ball.yunits * ball.speed * deltaTime;
+                ball = Ebullet[i];
+                updateBall(ball);
+                drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
+            }
 
-                    Context.beginPath();
-                    Context.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
-                    Context.closePath();
-                    Context.fill();
-
-                    if (ball.x > Canvas.width || ball.x < 0) {
-                        ball.angle = 180 - ball.angle;
-                        updateBall(ball);
-                    } else if (ball.y > Canvas.height || ball.y < 0) {
-                        ball.angle = 360 - ball.angle;
-                        updateBall(ball);
-                    }
-                }
+        }
+        function goSinbullet(ball)
+        {
+            ball.speed = 20;
+            ball.x += ball.speed * deltaTime;
+            ball.y = ball.yunits + Math.sin(ball.bs * 0.1 * Math.PI) * 10;
+            ball.bs += ball.speed * deltaTime;
+            if(ball.x>Canvas.width-1||ball.y>Canvas.height-1)
+            {
+                ball.x = ball.xunits;
+                ball.y = ball.yunits;
             }
         }
         function updateBall(ball)
@@ -163,8 +159,21 @@
                 Player.dx = 0;
             }
         }
+
+        function drawCircle(x, y, r, sa, ea, f) {
+            Context.beginPath();
+            Context.arc(x, y, r, sa, ea, true);
+            Context.closePath();
+            if (f == true) {
+                Context.fill();
+            }
+            else {
+                Context.stroke();
+            }
+        }
     }
-</script>
+
+    </script>
 
 </head>
 <body bgColor="black">
