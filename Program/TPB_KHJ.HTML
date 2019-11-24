@@ -9,40 +9,29 @@
         //document.addEventListener('keypress', onKeyPressFunc(event), false);
         document.onkeydown = onKeyDownFunc;
         document.onkeyup = onKeyUpFunc;
+        document.onmousemove = onMouseMoveFunc;
         var Canvas = document.getElementById('canvas');
         var Context = Canvas.getContext('2d');
+        document.getElementById('container').style.left = window.innerWidth / 2 - 400 + 'px';
+
         var frame = 60;
         var deltaTime = 1 / frame;
 
+        var System = {Game: 0, Pause: 0, Life: 2, Bomb: 1}
+
         var Objects = new Array();
-        var Player = { type: "player", x: 400, y: 300, angle: 0, speed: 50, size: 5, dx: 0, dy: 0 };
-        var Cursor = { type: "player", x: 400, y: 300, angle: 0, size: 5}
+        var Player = { type: "player", x: 400, y: 300, angle: 0, speed: 50, size: 8, dx: 0, dy: 0 };
+        var Cursor = { type: "player", x: 0, y: 0, angle: 0, size: 10}
         var Enemies = new Array();
         var Pbullet = new Array();
         var Ebullet = new Array();
 
         var numBalls = 10;
         var tempBall;
-        var tempX;
-        var tempY;
-        var tempAngle;
-        var tempRadians;
-        var tempXunits;
-        var tempYunits;
-        var tempSize;
-        var tempSpeed;
         for (var i = 0; i < numBalls; i++)
         {
-            tempX = 100;
-            tempY = 100;
-            tempAngle = Math.floor(Math.random() * 360);
-            tempRadians = tempAngle * Math.PI / 180;
-            tempXunits = 100;
-            tempYunits = 100;
-            tempSize = 5;
-            tempSpeed = 5;
-
-            tempBall = { type: "etc", x: tempX, y: tempY, angle: tempAngle, xunits: tempXunits, yunits: tempYunits, size: tempSize, speed: tempSpeed, bs:0}
+            var tempAngle = Math.floor(Math.random() * 360);
+            tempBall = { type: "etc", x: 100, y: 100, angle: tempAngle, speed: 20, size: 5, dx: 0, dy: 0, bs: 0}
             Ebullet.push(tempBall);
         }
 
@@ -77,6 +66,30 @@
             }
             drawCircle(Player.x, Player.y, Player.size, 0, Math.PI * 2, true);
 
+            //Cursor & Triangle
+            Context.strokeStyle = '#000000';
+            var cLeng = 5;
+            Context.beginPath();
+            Context.moveTo(Cursor.x + cLeng, Cursor.y);
+            Context.lineTo(Cursor.x - cLeng, Cursor.y);
+            Context.stroke();
+            Context.moveTo(Cursor.x, Cursor.y + cLeng);
+            Context.lineTo(Cursor.x, Cursor.y - cLeng);
+            Context.stroke();
+            Context.closePath();
+
+            Context.fillStyle = "#FF0000";
+            Player.angle = -Math.atan2((Cursor.y - Player.y), (Cursor.x - Player.x));
+            console.log(Player.angle);
+            var distPT = Player.size + Cursor.size;
+            Context.beginPath();
+            Context.moveTo(Player.x + distPT * Math.cos(Player.angle), Player.y - distPT * Math.sin(Player.angle));
+            Context.lineTo(Player.x + (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.cos(Player.angle) + (-Cursor.size / 2) * Math.sin(Player.angle), Player.y - (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.sin(Player.angle) + (-Cursor.size / 2) * Math.cos(Player.angle));
+            Context.lineTo(Player.x + (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.cos(Player.angle) + (Cursor.size / 2) * Math.sin(Player.angle), Player.y - (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.sin(Player.angle) + (Cursor.size / 2) * Math.cos(Player.angle));
+            Context.closePath();
+            Context.fill();
+
+            Context.fillStyle = "#000000";
             //Enemy
 
             //Bullets
@@ -86,10 +99,10 @@
 
             //etc
             var ball;
-            for (var i = 1; i < 1; i++)
+            for (var i = 1; i < numBalls; i++)
             {
                 ball = Ebullet[i];
-                updateBall(ball);
+                goReflectbullet(ball);
                 drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
             }
 
@@ -106,11 +119,20 @@
                 ball.y = ball.yunits;
             }
         }
-        function updateBall(ball)
+        function goReflectbullet(ball)
         {
-            ball.radians = ball.angle * Math.PI / 180;
-            ball.xunits = Math.cos(ball.radians);
-            ball.yunits = Math.sin(ball.radians);
+            var radians = ball.angle * Math.PI / 180;
+            ball.dx = Math.cos(radians);
+            ball.dy = Math.sin(radians);
+
+            ball.x += ball.dx * ball.speed * deltaTime;
+            ball.y += ball.dy * ball.speed * deltaTime;
+            if (ball.x > Canvas.width - ball.size || ball.x < ball.size) {
+                ball.angle = 180 - ball.angle;
+            }
+            if (ball.y > Canvas.height - ball.size || ball.y < ball.size) {
+                ball.angle = 360 - ball.angle;
+            }
         }
 
         function onKeyDownFunc(e)
@@ -159,6 +181,14 @@
                 Player.dx = 0;
             }
         }
+        function onMouseMoveFunc(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var rect = Canvas.getBoundingClientRect();
+            Cursor.x = e.clientX - rect.left;
+            Cursor.y = e.clientY - rect.top;
+        }
 
         function drawCircle(x, y, r, sa, ea, f) {
             Context.beginPath();
@@ -177,7 +207,7 @@
 
 </head>
 <body bgColor="black">
-    <div style="position: absolute; top: 50px; left: 50px;">
+    <div id="container" style="position: absolute; top: 20px; left: 50px;">
         <canvas id="canvas" width="800" height="600">
             Your browser does not support the HTML 5 Canvas.
         </canvas>
