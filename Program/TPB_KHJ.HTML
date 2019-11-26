@@ -43,13 +43,14 @@
         function update()
         {
             draw();
-            //collision
+            collision();
             //stat
 
             //Pattack
             if (Player.attackCool == 0 && attcking == 1) {
                 Player.attackCool = 1;
-                createBullet(Player.x, Player.y, "eBullet", "repl", 80, Player.angle * 180 / Math.PI, 2, 3);
+                //createBullet(Player.x, Player.y, "eBullet", "sin", 80, Player.angle * 180 / Math.PI, 2, 3);
+                createBullet(Player.x, Player.y, "eBullet", "big", 80, Player.angle * 180 / Math.PI, 2, 1);
                 setTimeout(function () { Player.attackCool = 0 }, deltaTime * 60 * 66);
             }
         }
@@ -66,7 +67,6 @@
             Context.fillStyle = "#000000";
 
             Context.fillStyle = "#000000";
-            //Enemy
 
             //Bullets
             var ball;
@@ -76,15 +76,25 @@
                 if (ball.bulletType == "sin")
                 {
                     goSinbullet(ball);
+                    drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
                 }
-                else if (ball.bulletType == "repl")
-                {
+                else if (ball.bulletType == "repl") {
                     goReflectbullet(ball);
+                    drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
                 }
-                drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
+                else if (ball.bulletType == "big") {
+                    goBigbullet(ball);
+                    drawCircle(ball.x, ball.y, ball.size*10, 0, Math.PI * 2, true);
+                }
+                else if (ball.bulletType == "lazer") {
+                    goLazerbullet(ball);
+                    drawRect(ball.x, ball.y, ball.size, ball.size, true);
+                }
             }
 
             //etc
+
+            //Enemy
 
 
             //Player
@@ -114,7 +124,6 @@
 
             Context.fillStyle = "#FF0000";
             Player.angle = -Math.atan2((Cursor.y - Player.y), (Cursor.x - Player.x));
-            console.log(Player.angle);
             var distPT = Player.size + Cursor.size;
             Context.beginPath();
             Context.moveTo(Player.x + distPT * Math.cos(Player.angle), Player.y - distPT * Math.sin(Player.angle));
@@ -122,12 +131,21 @@
             Context.lineTo(Player.x + (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.cos(Player.angle) + (Cursor.size / 2) * Math.sin(Player.angle), Player.y - (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.sin(Player.angle) + (Cursor.size / 2) * Math.cos(Player.angle));
             Context.closePath();
             Context.fill();
+        }
+        function collision()
+        {
 
         }
+
         function createBullet(Bx, By, Btype, BbulletType, Bspeed, Bangle, Bsize, Bspacial)
         {
             var tempBall = { type: Btype, bulletType: BbulletType, x: Bx, y: By, angle: Bangle, speed: Bspeed, size: Bsize, dx: 0, dy: 0, bs: Bspacial }
-            if (tempBall.x > Canvas.width - tempBall.size || tempBall.x < tempBall.size || tempBall.y > Canvas.height - tempBall.size || tempBall.y < tempBall.size) {
+            if (tempBall.bulletType == "sin")
+            {
+                tempBall.dx = tempBall.x;
+                tempBall.dy = tempBall.y;
+            }
+            if (tempBall.x > Canvas.width || tempBall.x < 0 || tempBall.y > Canvas.height || tempBall.y < 0) {
                 return;
             }
 
@@ -155,19 +173,63 @@
                 ball.angle = 360 - ball.angle;
                 ball.bs--;
             }
-            if (ball.bs < 1) { Ebullet.splice(Ebullet.findIndex(function (item) { return item === ball }), 1); eBulletNum--; }
+            if (ball.bs < 1) {
+                Ebullet.splice(Ebullet.findIndex(function (item) { return item === ball }), 1);
+                eBulletNum--;
+            }
+        }
+        function goBigbullet(ball) {
+            var radians = -ball.angle * Math.PI / 180;
+            ball.dx = Math.cos(radians);
+            ball.dy = Math.sin(radians);
+
+            ball.x += ball.dx * ball.speed * deltaTime;
+            ball.y += ball.dy * ball.speed * deltaTime;
+            if (ball.x > Canvas.width - ball.size || ball.x < ball.size) {
+                ball.angle = 180 - ball.angle;
+                ball.bs--;
+            }
+            if (ball.y > Canvas.height - ball.size || ball.y < ball.size) {
+                ball.angle = 360 - ball.angle;
+                ball.bs--;
+            }
+            if (ball.bs < 1) {
+                var smalls = 20;
+                for (var i = 0; i < smalls; i++)
+                {
+                    createBullet(ball.x, ball.y, "eBullet", "repl", 80, -ball.angle + 360 / smalls * i, 2, 1);
+                }
+                Ebullet.splice(Ebullet.findIndex(function (item) { return item === ball }), 1);
+                eBulletNum--;
+            }
         }
         function goSinbullet(ball)
         {
             ball.speed = 20;
-            ball.x += ball.speed * deltaTime;
-            ball.y = 100 + ball.dy + Math.sin(ball.bs * 0.1 * Math.PI) * 10;
+            var theta = -ball.angle;
+            ball.x = ball.dx + ball.bs * Math.cos(theta * Math.PI / 180) - 10 * Math.sin(ball.bs * Math.PI / 180 * 5) * Math.sin(theta * Math.PI / 180);
+            ball.y = ball.dy + ball.bs * Math.sin(theta * Math.PI / 180) + 10 * Math.sin(ball.bs * Math.PI / 180 * 5) * Math.cos(theta * Math.PI / 180);
             ball.bs += ball.speed * deltaTime;
-            if(ball.x>Canvas.width-1||ball.y>Canvas.height-1)
-            {
+            if (ball.x > Canvas.width - 1) {
+                ball.x = ball.dx;
+                ball.y = ball.dy;
+
+            }
+            if (ball.y > Canvas.height - 1) {
+                ball.y = ball.dy;
+                ball.x = ball.dx;
+            }
+            if (ball.x < 0) {
                 ball.x = ball.dx;
                 ball.y = ball.dy;
             }
+            if (ball.y < 0) {
+                ball.x = ball.dx;
+                ball.y = ball.dy;
+            }
+        }
+        function goLazerbullet(ball) {
+            ball.x = ball.x + 1;
         }
 
         //function createWindow(Taps)
@@ -268,6 +330,17 @@
         function drawCircle(x, y, r, sa, ea, f) {
             Context.beginPath();
             Context.arc(x, y, r, sa, ea, true);
+            Context.closePath();
+            if (f == true) {
+                Context.fill();
+            }
+            else {
+                Context.stroke();
+            }
+        }
+        function drawRect(x, y, w, h, f) {
+            Context.beginPath();
+            Context.rect(x - w / 2, y - h / 2, w*2, h);
             Context.closePath();
             if (f == true) {
                 Context.fill();

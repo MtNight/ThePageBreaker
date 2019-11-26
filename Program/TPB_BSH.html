@@ -1,174 +1,266 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
 <head>
-<meta charset="UTF-8">
-<script type="text/javascript">
+    <meta charset="UTF-8">
+    <script type="text/javascript">
     window.addEventListener('load', init, false);
     function init()
     {
         //document.addEventListener('keypress', onKeyPressFunc(event), false);
         document.onkeydown = onKeyDownFunc;
+        document.onkeypress = onKeyPressFunc;
         document.onkeyup = onKeyUpFunc;
+        document.onmousemove = onMouseMoveFunc;
         var Canvas = document.getElementById('canvas');
         var Context = Canvas.getContext('2d');
+        document.getElementById('container').style.left = window.innerWidth / 2 - 400 + 'px';
+
         var frame = 60;
         var deltaTime = 1 / frame;
 
+        var System = { Game: 0, Pause: 0, Life: 2, Bomb: 1, TapSize: 5 };
+        var Taps = new Array();
+        //createWindow(Taps);
+
         var Objects = new Array();
-        var Player = { type: "player", x: 400, y: 300, angle: 0, speed: 50, size: 5, dx: 0, dy: 0 };
+        var Player = { type: "player", x: 400, y: 300, angle: 0, speed: 40, size: 8, dx: 0, dy: 0, attackCool: 0 };
+        var Cursor = { type: "player", x: 0, y: 0, angle: 0, size: 10}
         var Enemies = new Array();
         var Pbullet = new Array();
         var Ebullet = new Array();
-        Objects.push(Player);
 
-        var numBalls = 10;
+        var eBulletNum = 10;
         var tempBall;
-        var tempX;
-        var tempY;
-        var tempAngle;
-        var tempRadians;
-        var tempXunits;
-        var tempYunits;
-        var tempSize;
-        var tempSpeed;
-        
-
-        for (var i = 0; i < numBalls; i++)
+        for (var i = 0; i < eBulletNum; i++)
         {
-            var k;
-            k=0;
-            if(i>1)
-                k = i;
-            tempX = 100+k*5;
-            tempY = 100;
-            tempAngle = Math.floor(Math.random() * 360);
-            tempRadians = tempAngle * Math.PI / 180;
-            tempXunits = 100+k*5;
-            tempYunits = 100;
-            tempSize = 5;
-            tempSpeed = 5;
-
-            tempBall = { type: "etc", x: tempX, y: tempY, angle: tempAngle, xunits: tempXunits, yunits: tempYunits, size: tempSize, speed: tempSpeed ,bs:0}
+            var tempAngle = Math.floor(Math.random() * 360);
+            tempBall = { type: "eBullet", bulletType: "repl", x: 100, y: 100, angle: tempAngle, speed: 20, size: 5, dx: 0, dy: 0, bs: 0}
             Ebullet.push(tempBall);
         }
+        Ebullet[0].bulletType = "sin";
 
-        setInterval(update, 3);
+        setInterval(update, deltaTime);
         function update()
         {
             draw();
-            //collision
+            collision();
             //stat
+
+            //Pattack
+            if (Player.attackCool == 0 && attcking == 1) {
+                Player.attackCool = 1;
+                //createBullet(Player.x, Player.y, "eBullet", "sin", 80, Player.angle * 180 / Math.PI, 2, 3);
+                createBullet(Player.x, Player.y, "eBullet", "big", 80, Player.angle * 180 / Math.PI, 2, 1);
+                setTimeout(function () { Player.attackCool = 0 }, deltaTime * 60 * 66);
+            }
         }
 
         function draw()
         {
             //Canvas
-            Context.fillStyle = '#CCCCCC';
+            Context.fillStyle = '#FFFFFF';
             Context.fillRect(0, 0, Canvas.width, Canvas.height);
             //Box
             Context.strokeStyle = '#000000';
             Context.strokeRect(1, 1, Canvas.width - 2, Canvas.height - 2);
 
-            //Place balls
             Context.fillStyle = "#000000";
+
+            Context.fillStyle = "#000000";
+
+            //Bullets
             var ball;
-            var n=0;
-            for (var i = 0; i < 1; i++)
-            {
-                ball = Objects[i];
-                if (ball.type == "player")
-                {
-                    if (ball.dx != 0 || ball.dy != 0)
-                    {
-                        if (Player.dx > 1) Player.dx = 1;
-                        if (Player.dy < -1) Player.dx = -1;
-                        if (Player.dy > 1) Player.dy = 1;
-                        if (Player.dy < -1) Player.dy = -1;
-                        var dx = ball.dx / Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
-                        var dy = ball.dy / Math.sqrt(ball.dx * ball.dx + ball.dy * ball.dy);
-                        ball.x += dx * ball.speed * deltaTime;
-                        ball.y += dy * ball.speed * deltaTime;
-                    }
-                    drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
-                }
-                else if (ball.type == "etc")
-                {
-                    updateBall(ball);
-                    drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
-                }
-            }
-            drawCircle(100,100,10,0,2*Math.PI);
-            for(var i=0;i<10;i++)
+            for (var i = 0; i < eBulletNum; i++)
             {
                 ball = Ebullet[i];
-                if(i==1)
-                    goSinbulletx(ball);
-                else if(i==2)
-                    goline(ball);
-                else
-                    golazerbulletx(ball);
-                drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
+                if (ball.bulletType == "sin")
+                {
+                    goSinbullet(ball);
+                    drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
+                }
+                else if (ball.bulletType == "repl") {
+                    goReflectbullet(ball);
+                    drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
+                }
+                else if (ball.bulletType == "big") {
+                    goBigbullet(ball);
+                    drawCircle(ball.x, ball.y, ball.size*10, 0, Math.PI * 2, true);
+                }
+                else if (ball.bulletType == "lazer") {
+                    goLazerbullet(ball);
+                    drawRect(ball.x, ball.y, ball.size, ball.size, true);
+                }
             }
+
+            //etc
+
+            //Enemy
+
+
+            //Player
+            if (Player.dx != 0 || Player.dy != 0) {
+                if (Player.dx > 1) Player.dx = 1;
+                if (Player.dy < -1) Player.dx = -1;
+                if (Player.dy > 1) Player.dy = 1;
+                if (Player.dy < -1) Player.dy = -1;
+                var dx = Player.dx / Math.sqrt(Player.dx * Player.dx + Player.dy * Player.dy);
+                var dy = Player.dy / Math.sqrt(Player.dx * Player.dx + Player.dy * Player.dy);
+                Player.x += dx * Player.speed * deltaTime;
+                Player.y += dy * Player.speed * deltaTime;
+            }
+            drawCircle(Player.x, Player.y, Player.size, 0, Math.PI * 2, true);
+
+            //Cursor & Triangle
+            Context.strokeStyle = '#000000';
+            var cLeng = 5;
+            Context.beginPath();
+            Context.moveTo(Cursor.x + cLeng, Cursor.y);
+            Context.lineTo(Cursor.x - cLeng, Cursor.y);
+            Context.stroke();
+            Context.moveTo(Cursor.x, Cursor.y + cLeng);
+            Context.lineTo(Cursor.x, Cursor.y - cLeng);
+            Context.stroke();
+            Context.closePath();
+
+            Context.fillStyle = "#FF0000";
+            Player.angle = -Math.atan2((Cursor.y - Player.y), (Cursor.x - Player.x));
+            var distPT = Player.size + Cursor.size;
+            Context.beginPath();
+            Context.moveTo(Player.x + distPT * Math.cos(Player.angle), Player.y - distPT * Math.sin(Player.angle));
+            Context.lineTo(Player.x + (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.cos(Player.angle) + (-Cursor.size / 2) * Math.sin(Player.angle), Player.y - (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.sin(Player.angle) + (-Cursor.size / 2) * Math.cos(Player.angle));
+            Context.lineTo(Player.x + (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.cos(Player.angle) + (Cursor.size / 2) * Math.sin(Player.angle), Player.y - (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.sin(Player.angle) + (Cursor.size / 2) * Math.cos(Player.angle));
+            Context.closePath();
+            Context.fill();
         }
-        function golazerbulletx(ball)
+        function collision()
         {
-            ball.x = ball.x+1;
-        }
-        function goSinbulletx(ball)
-        {
-            ball.x=ball.xunits+Math.sin(ball.y/Math.PI)*10;
-            ball.y++;
-            if(ball.x>Canvas.width-1||ball.y>Canvas.height-1||ball.y<0)
-            {
-                ball.x = ball.xunits;
-                ball.y = ball.yunits;
-            }
-        }
-        function goSinbullet1(ball)
-        {
-            ball.speed = 20;
-            var theta=50;
-            ball.x=ball.xunits+ball.bs*Math.cos(theta*Math.PI/180)-10*Math.sin(ball.bs*Math.PI/180*5)*Math.sin(theta*Math.PI/180);
-            ball.y=ball.yunits+ball.bs*Math.sin(theta*Math.PI/180)+10*Math.sin(ball.bs*Math.PI/180*5)*Math.cos(theta*Math.PI/180)+ 300;
-            ball.bs += ball.speed * deltaTime;
-            if(ball.x>Canvas.width-1)
-            {
-                ball.x = ball.xunits;
-                ball.y = ball.yunits;
-                
-            }
-            if(ball.y>Canvas.height-1)
-            {
-                ball.y = ball.yunits;
-                ball.x = ball.xunits;
-            }
-            if(ball.x<0)
-            {
-                ball.x = ball.xunits;
-                ball.y = ball.yunits;
-            }
-            if(ball.y<0)
-            {
-                ball.x = ball.xunits;
-                ball.y = ball.yunits;
-            }
-        }
-        function goline(ball)
-        {
-            ball.x = ball.x+1;
-            if(ball.x>Canvas.width-1||ball.y>Canvas.height-1||ball.y<0)
-            {
-                ball.x = ball.xunits;
-                ball.y = ball.yunits;
-            }
-        }
-        function updateBall(ball)
-        {
-            ball.radians = ball.angle * Math.PI / 180;
-            ball.xunits = Math.cos(ball.radians);
-            ball.yunits = Math.sin(ball.radians);
+
         }
 
+        function createBullet(Bx, By, Btype, BbulletType, Bspeed, Bangle, Bsize, Bspacial)
+        {
+            var tempBall = { type: Btype, bulletType: BbulletType, x: Bx, y: By, angle: Bangle, speed: Bspeed, size: Bsize, dx: 0, dy: 0, bs: Bspacial }
+            if (tempBall.bulletType == "sin")
+            {
+                tempBall.dx = tempBall.x;
+                tempBall.dy = tempBall.y;
+            }
+            if (tempBall.x > Canvas.width || tempBall.x < 0 || tempBall.y > Canvas.height || tempBall.y < 0) {
+                return;
+            }
+
+            if (tempBall.type == "eBullet")
+            {
+                Ebullet.push(tempBall);
+            }
+            else if (tempBall.type == "pBullet") {
+                Pbullet.push(tempBall);
+            }
+            eBulletNum++;
+        }
+        function goReflectbullet(ball) {
+            var radians = -ball.angle * Math.PI / 180;
+            ball.dx = Math.cos(radians);
+            ball.dy = Math.sin(radians);
+
+            ball.x += ball.dx * ball.speed * deltaTime;
+            ball.y += ball.dy * ball.speed * deltaTime;
+            if (ball.x > Canvas.width - ball.size || ball.x < ball.size) {
+                ball.angle = 180 - ball.angle;
+                ball.bs--;
+            }
+            if (ball.y > Canvas.height - ball.size || ball.y < ball.size) {
+                ball.angle = 360 - ball.angle;
+                ball.bs--;
+            }
+            if (ball.bs < 1) {
+                Ebullet.splice(Ebullet.findIndex(function (item) { return item === ball }), 1);
+                eBulletNum--;
+            }
+        }
+        function goBigbullet(ball) {
+            var radians = -ball.angle * Math.PI / 180;
+            ball.dx = Math.cos(radians);
+            ball.dy = Math.sin(radians);
+
+            ball.x += ball.dx * ball.speed * deltaTime;
+            ball.y += ball.dy * ball.speed * deltaTime;
+            if (ball.x > Canvas.width - ball.size || ball.x < ball.size) {
+                ball.angle = 180 - ball.angle;
+                ball.bs--;
+            }
+            if (ball.y > Canvas.height - ball.size || ball.y < ball.size) {
+                ball.angle = 360 - ball.angle;
+                ball.bs--;
+            }
+            if (ball.bs < 1) {
+                var smalls = 20;
+                for (var i = 0; i < smalls; i++)
+                {
+                    createBullet(ball.x, ball.y, "eBullet", "repl", 80, -ball.angle + 360 / smalls * i, 2, 1);
+                }
+                Ebullet.splice(Ebullet.findIndex(function (item) { return item === ball }), 1);
+                eBulletNum--;
+            }
+        }
+        function goSinbullet(ball)
+        {
+            ball.speed = 20;
+            var theta = -ball.angle;
+            ball.x = ball.dx + ball.bs * Math.cos(theta * Math.PI / 180) - 10 * Math.sin(ball.bs * Math.PI / 180 * 5) * Math.sin(theta * Math.PI / 180);
+            ball.y = ball.dy + ball.bs * Math.sin(theta * Math.PI / 180) + 10 * Math.sin(ball.bs * Math.PI / 180 * 5) * Math.cos(theta * Math.PI / 180);
+            ball.bs += ball.speed * deltaTime;
+            if (ball.x > Canvas.width - 1) {
+                ball.x = ball.dx;
+                ball.y = ball.dy;
+
+            }
+            if (ball.y > Canvas.height - 1) {
+                ball.y = ball.dy;
+                ball.x = ball.dx;
+            }
+            if (ball.x < 0) {
+                ball.x = ball.dx;
+                ball.y = ball.dy;
+            }
+            if (ball.y < 0) {
+                ball.x = ball.dx;
+                ball.y = ball.dy;
+            }
+        }
+        function goLazerbullet(ball) {
+            ball.x = ball.x + 1;
+        }
+
+        //function createWindow(Taps)
+        //{
+        //    createTap(0);
+        //}
+        //function createTap(i)
+        //{
+        //    var tap;
+        //    if (i == 0) {
+        //        tap = { type: "Tap", TapType: "Normal", Links: new Array(4), Enemy: null, clear: 0 };
+        //        Links[0] = Links[1] = Links[2] = Links[3] = -1;
+        //        for (var j = 0; j < 4; j++) {
+        //            if (Links[j] == -1 && i < System.TapSize) {
+        //                createTap(Taps.length + 1);
+        //            }
+        //        }
+        //        Taps.push(tap);
+        //    }
+        //    else if (i == System.TapSize - 1)
+        //    {
+        //    }
+        //    else
+        //    {
+        //    }
+        //}
+        //function findEndTap(Taps)
+        //{
+        //}
+
+        var attcking = 0;
         function onKeyDownFunc(e)
         {
             e.stopPropagation();
@@ -193,6 +285,13 @@
                 Player.dx++;
                 if (Player.dx == 0) setTimeout(onKeyDownFunc(e), 1);
             }
+
+            if (e.keyCode == 32) {
+                attcking = 1;
+            }
+        }
+        function onKeyPressFunc(e) {
+            e.stopPropagation();
         }
         function onKeyUpFunc(e) {
             e.preventDefault();
@@ -214,6 +313,18 @@
             {
                 Player.dx = 0;
             }
+
+            if (e.keyCode == 32) {
+                attcking = 0;
+            }
+        }
+        function onMouseMoveFunc(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            var rect = Canvas.getBoundingClientRect();
+            Cursor.x = e.clientX - rect.left;
+            Cursor.y = e.clientY - rect.top;
         }
 
         function drawCircle(x, y, r, sa, ea, f) {
@@ -227,13 +338,24 @@
                 Context.stroke();
             }
         }
+        function drawRect(x, y, w, h, f) {
+            Context.beginPath();
+            Context.rect(x - w / 2, y - h / 2, w*2, h);
+            Context.closePath();
+            if (f == true) {
+                Context.fill();
+            }
+            else {
+                Context.stroke();
+            }
+        }
     }
 
-</script>
+    </script>
 
 </head>
 <body bgColor="black">
-    <div style="position: absolute; top: 50px; left: 50px;">
+    <div id="container" style="position: absolute; top: 20px; left: 50px;">
         <canvas id="canvas" width="800" height="600">
             Your browser does not support the HTML 5 Canvas.
         </canvas>
