@@ -8,6 +8,7 @@
     {
         //document.addEventListener('keypress', onKeyPressFunc(event), false);
         document.onkeydown = onKeyDownFunc;
+        document.onkeypress = onKeyPressFunc;
         document.onkeyup = onKeyUpFunc;
         document.onmousemove = onMouseMoveFunc;
         var Canvas = document.getElementById('canvas');
@@ -17,23 +18,26 @@
         var frame = 60;
         var deltaTime = 1 / frame;
 
-        var System = {Game: 0, Pause: 0, Life: 2, Bomb: 1}
+        var System = { Game: 0, Pause: 0, Life: 2, Bomb: 1, TapSize: 5 };
+        var Taps = new Array();
+        //createWindow(Taps);
 
         var Objects = new Array();
-        var Player = { type: "player", x: 400, y: 300, angle: 0, speed: 50, size: 8, dx: 0, dy: 0 };
+        var Player = { type: "player", x: 400, y: 300, angle: 0, speed: 40, size: 8, dx: 0, dy: 0, attackCool: 0 };
         var Cursor = { type: "player", x: 0, y: 0, angle: 0, size: 10}
         var Enemies = new Array();
         var Pbullet = new Array();
         var Ebullet = new Array();
 
-        var numBalls = 10;
+        var eBulletNum = 10;
         var tempBall;
-        for (var i = 0; i < numBalls; i++)
+        for (var i = 0; i < eBulletNum; i++)
         {
             var tempAngle = Math.floor(Math.random() * 360);
-            tempBall = { type: "etc", x: 100, y: 100, angle: tempAngle, speed: 20, size: 5, dx: 0, dy: 0, bs: 0}
+            tempBall = { type: "eBullet", bulletType: "repl", x: 100, y: 100, angle: tempAngle, speed: 20, size: 5, dx: 0, dy: 0, bs: 0}
             Ebullet.push(tempBall);
         }
+        Ebullet[0].bulletType = "sin";
 
         setInterval(update, deltaTime);
         function update()
@@ -41,18 +45,48 @@
             draw();
             //collision
             //stat
+
+            //Pattack
+            if (Player.attackCool == 0 && attcking == 1) {
+                Player.attackCool = 1;
+                createBullet(Player.x, Player.y, "eBullet", "repl", 80, Player.angle * 180 / Math.PI, 2, 3);
+                setTimeout(function () { Player.attackCool = 0 }, deltaTime * 60 * 66);
+            }
         }
 
         function draw()
         {
             //Canvas
-            Context.fillStyle = '#CCCCCC';
+            Context.fillStyle = '#FFFFFF';
             Context.fillRect(0, 0, Canvas.width, Canvas.height);
             //Box
             Context.strokeStyle = '#000000';
             Context.strokeRect(1, 1, Canvas.width - 2, Canvas.height - 2);
 
             Context.fillStyle = "#000000";
+
+            Context.fillStyle = "#000000";
+            //Enemy
+
+            //Bullets
+            var ball;
+            for (var i = 0; i < eBulletNum; i++)
+            {
+                ball = Ebullet[i];
+                if (ball.bulletType == "sin")
+                {
+                    goSinbullet(ball);
+                }
+                else if (ball.bulletType == "repl")
+                {
+                    goReflectbullet(ball);
+                }
+                drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
+            }
+
+            //etc
+
+
             //Player
             if (Player.dx != 0 || Player.dy != 0) {
                 if (Player.dx > 1) Player.dx = 1;
@@ -89,39 +123,25 @@
             Context.closePath();
             Context.fill();
 
-            Context.fillStyle = "#000000";
-            //Enemy
-
-            //Bullets
-            ball = Ebullet[0];
-            goSinbullet(ball);
-            drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
-
-            //etc
-            var ball;
-            for (var i = 1; i < numBalls; i++)
-            {
-                ball = Ebullet[i];
-                goReflectbullet(ball);
-                drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
+        }
+        function createBullet(Bx, By, Btype, BbulletType, Bspeed, Bangle, Bsize, Bspacial)
+        {
+            var tempBall = { type: Btype, bulletType: BbulletType, x: Bx, y: By, angle: Bangle, speed: Bspeed, size: Bsize, dx: 0, dy: 0, bs: Bspacial }
+            if (tempBall.x > Canvas.width - tempBall.size || tempBall.x < tempBall.size || tempBall.y > Canvas.height - tempBall.size || tempBall.y < tempBall.size) {
+                return;
             }
 
-        }
-        function goSinbullet(ball)
-        {
-            ball.speed = 20;
-            ball.x += ball.speed * deltaTime;
-            ball.y = ball.yunits + Math.sin(ball.bs * 0.1 * Math.PI) * 10;
-            ball.bs += ball.speed * deltaTime;
-            if(ball.x>Canvas.width-1||ball.y>Canvas.height-1)
+            if (tempBall.type == "eBullet")
             {
-                ball.x = ball.xunits;
-                ball.y = ball.yunits;
+                Ebullet.push(tempBall);
             }
+            else if (tempBall.type == "pBullet") {
+                Pbullet.push(tempBall);
+            }
+            eBulletNum++;
         }
-        function goReflectbullet(ball)
-        {
-            var radians = ball.angle * Math.PI / 180;
+        function goReflectbullet(ball) {
+            var radians = -ball.angle * Math.PI / 180;
             ball.dx = Math.cos(radians);
             ball.dy = Math.sin(radians);
 
@@ -129,12 +149,56 @@
             ball.y += ball.dy * ball.speed * deltaTime;
             if (ball.x > Canvas.width - ball.size || ball.x < ball.size) {
                 ball.angle = 180 - ball.angle;
+                ball.bs--;
             }
             if (ball.y > Canvas.height - ball.size || ball.y < ball.size) {
                 ball.angle = 360 - ball.angle;
+                ball.bs--;
+            }
+            if (ball.bs < 1) { Ebullet.splice(Ebullet.findIndex(function (item) { return item === ball }), 1); eBulletNum--; }
+        }
+        function goSinbullet(ball)
+        {
+            ball.speed = 20;
+            ball.x += ball.speed * deltaTime;
+            ball.y = 100 + ball.dy + Math.sin(ball.bs * 0.1 * Math.PI) * 10;
+            ball.bs += ball.speed * deltaTime;
+            if(ball.x>Canvas.width-1||ball.y>Canvas.height-1)
+            {
+                ball.x = ball.dx;
+                ball.y = ball.dy;
             }
         }
 
+        //function createWindow(Taps)
+        //{
+        //    createTap(0);
+        //}
+        //function createTap(i)
+        //{
+        //    var tap;
+        //    if (i == 0) {
+        //        tap = { type: "Tap", TapType: "Normal", Links: new Array(4), Enemy: null, clear: 0 };
+        //        Links[0] = Links[1] = Links[2] = Links[3] = -1;
+        //        for (var j = 0; j < 4; j++) {
+        //            if (Links[j] == -1 && i < System.TapSize) {
+        //                createTap(Taps.length + 1);
+        //            }
+        //        }
+        //        Taps.push(tap);
+        //    }
+        //    else if (i == System.TapSize - 1)
+        //    {
+        //    }
+        //    else
+        //    {
+        //    }
+        //}
+        //function findEndTap(Taps)
+        //{
+        //}
+
+        var attcking = 0;
         function onKeyDownFunc(e)
         {
             e.stopPropagation();
@@ -159,6 +223,13 @@
                 Player.dx++;
                 if (Player.dx == 0) setTimeout(onKeyDownFunc(e), 1);
             }
+
+            if (e.keyCode == 32) {
+                attcking = 1;
+            }
+        }
+        function onKeyPressFunc(e) {
+            e.stopPropagation();
         }
         function onKeyUpFunc(e) {
             e.preventDefault();
@@ -179,6 +250,10 @@
             if (e.keyCode == 68 && Player.dx > -1)   //D
             {
                 Player.dx = 0;
+            }
+
+            if (e.keyCode == 32) {
+                attcking = 0;
             }
         }
         function onMouseMoveFunc(e) {
