@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -35,11 +35,15 @@
 
         for (var i = 0; i < numBalls; i++)
         {
-            tempX = 100;
+            var k;
+            k=0;
+            if(i>1)
+                k = i;
+            tempX = 100+k*5;
             tempY = 100;
             tempAngle = Math.floor(Math.random() * 360);
             tempRadians = tempAngle * Math.PI / 180;
-            tempXunits = 100;
+            tempXunits = 100+k*5;
             tempYunits = 100;
             tempSize = 5;
             tempSpeed = 5;
@@ -48,7 +52,7 @@
             Ebullet.push(tempBall);
         }
 
-        setInterval(update, deltaTime);
+        setInterval(update, 3);
         function update()
         {
             draw();
@@ -93,19 +97,66 @@
                     drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
                 }
             }
-            
-            ball = Ebullet[0];
-            goSinbullet(ball, i);
-            drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
-        
+            drawCircle(100,100,10,0,2*Math.PI);
+            for(var i=0;i<10;i++)
+            {
+                ball = Ebullet[i];
+                if(i==1)
+                    goSinbulletx(ball);
+                else if(i==2)
+                    goline(ball);
+                else
+                    golazerbulletx(ball);
+                drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
+            }
         }
-        function goSinbullet(ball,i)
+        function golazerbulletx(ball)
+        {
+            ball.x = ball.x+1;
+        }
+        function goSinbulletx(ball)
+        {
+            ball.x=ball.xunits+Math.sin(ball.y/Math.PI)*10;
+            ball.y++;
+            if(ball.x>Canvas.width-1||ball.y>Canvas.height-1||ball.y<0)
+            {
+                ball.x = ball.xunits;
+                ball.y = ball.yunits;
+            }
+        }
+        function goSinbullet1(ball)
         {
             ball.speed = 20;
-            ball.x += ball.speed * deltaTime;
-            ball.y = ball.yunits + Math.sin(ball.bs * 0.1 * Math.PI) * 10;
+            var theta=50;
+            ball.x=ball.xunits+ball.bs*Math.cos(theta*Math.PI/180)-10*Math.sin(ball.bs*Math.PI/180*5)*Math.sin(theta*Math.PI/180);
+            ball.y=ball.yunits+ball.bs*Math.sin(theta*Math.PI/180)+10*Math.sin(ball.bs*Math.PI/180*5)*Math.cos(theta*Math.PI/180)+ 300;
             ball.bs += ball.speed * deltaTime;
-            if(ball.x>Canvas.width-1||ball.y>Canvas.height-1)
+            if(ball.x>Canvas.width-1)
+            {
+                ball.x = ball.xunits;
+                ball.y = ball.yunits;
+                
+            }
+            if(ball.y>Canvas.height-1)
+            {
+                ball.y = ball.yunits;
+                ball.x = ball.xunits;
+            }
+            if(ball.x<0)
+            {
+                ball.x = ball.xunits;
+                ball.y = ball.yunits;
+            }
+            if(ball.y<0)
+            {
+                ball.x = ball.xunits;
+                ball.y = ball.yunits;
+            }
+        }
+        function goline(ball)
+        {
+            ball.x = ball.x+1;
+            if(ball.x>Canvas.width-1||ball.y>Canvas.height-1||ball.y<0)
             {
                 ball.x = ball.xunits;
                 ball.y = ball.yunits;
