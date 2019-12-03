@@ -18,27 +18,41 @@
         var frame = 60;
         var deltaTime = 1 / frame;
 
-        var System = { Game: 0, Pause: 0, Life: 2, Bomb: 1, TapSize: 5, CurrentTap: 0 };
+        var System = { Game: 0, Pause: 0, Life: 2, Bomb: 1, TapSize: 10, CurrentTap: 0 };
+
         var Taps = new Array();
         createWindow(Taps);
-        var Link = new Array();
+
         var tapCorrection = 1 / 15;
+        var Link = new Array();
         for (var i = 0; i < 4; i++)
         {
-            var links = { type: "link", x: 400, y: 300, size: 8 };
+            var links = { type: "link", x: Canvas.width / 2, y: Canvas.height / 2, size: 8, active: false };
             switch (i)
             {
-                case 0: links.y += Canvas.height * tapCorrection * 6; break;
-                case 1: links.x += Canvas.width * tapCorrection * 6; break;
-                case 2: links.y -= Canvas.height * tapCorrection * 6; break;
-                case 3: links.x -= Canvas.width * tapCorrection * 6; break;
+                case 0: links.y += Canvas.height * tapCorrection * 6.5; break;
+                case 1: links.x += Canvas.width * tapCorrection * 6.5; break;
+                case 2: links.y -= Canvas.height * tapCorrection * 6.5; break;
+                case 3: links.x -= Canvas.width * tapCorrection * 6.5; break;
             }
             Link.push(links);
         }
 
-        var Player = { type: "player", x: 400, y: 300, angle: 0, speed: 40, size: 8, dx: 0, dy: 0, attackCool: 0 };
-        var Cursor = { type: "player", x: 0, y: 0, angle: 0, size: 10 }
         var Objects = new Array();
+        for (var i = 0; i < 4; i++)
+        {
+            var walls = { type: "wall", x: Canvas.width / 2, y: Canvas.height / 2, w: Canvas.width, h: Canvas.height };
+            switch (i) {
+                case 0: walls.y += Canvas.height * tapCorrection * 7; walls.h *= tapCorrection; break;
+                case 1: walls.x += Canvas.width * tapCorrection * 7; walls.w *= tapCorrection; break;
+                case 2: walls.y -= Canvas.height * tapCorrection * 7; walls.h *= tapCorrection; break;
+                case 3: walls.x -= Canvas.width * tapCorrection * 7; walls.w *= tapCorrection; break;
+            }
+            Objects.push(walls);
+        }
+
+        var Player = { type: "player", x: 400, y: 300, angle: 0, speed: 40, size: 8, dx: 0, dy: 0, attackCool: 0 };
+        var Cursor = { type: "player", x: 0, y: 0, angle: 0, size: 10 };
         var Enemies = new Array();
         var Pbullet = new Array();
         var Ebullet = new Array();
@@ -97,12 +111,13 @@
                     else { Context.strokeStyle = "#000000" }
                     drawCircle(Link[i].x, Link[i].y, Link[i].size, 0, Math.PI * 2, false);
                     Context.strokeStyle = "#000000"
+                    Link[i].active = true;
                 }
             }
 
             //Bullets
             var ball;
-            for (var i = 0; i < eBulletNum; i++)
+            for (var i = 0; i < Ebullet.length; i++)
             {
                 ball = Ebullet[i];
                 if (ball.bulletType == "sin")
@@ -120,11 +135,22 @@
                 }
                 else if (ball.bulletType == "lazer") {
                     goLazerbullet(ball);
-                    drawRect(ball.x, ball.y, ball.size, ball.size, true);
+                    drawRect(ball.x, ball.y, ball.size*2, ball.size, true);
                 }
             }
 
-            //etc
+            //walls
+            Context.strokeStyle = "#000000";
+            Context.fillStyle = "#00FF00";
+            for (var i = 0; i < Objects.length; i++)
+            {
+                var wall = Objects[i];
+                console.log(wall);
+                drawRect(wall.x, wall.y, wall.w, wall.h, true);
+            }
+            Context.strokeStyle = "#000000";
+            Context.fillStyle = "#000000";
+
 
             //Enemy
 
@@ -167,21 +193,135 @@
             //map
             Context.globalAlpha = 0.5;
             Context.fillStyle = "#CCCCCC";
-            var miniMap = { x: 10, y: 10, w: 80, h: 80 };
+            var miniMap = { x: 10, y: 10, w: 150, h: 150, size: 10 };
             Context.fillRect(miniMap.x, miniMap.y, miniMap.w, miniMap.h);
-            Context.globalAlpha = 0.8;
-            for (var i = 0; i < System.TapSize; i++)
+            Context.globalAlpha = 0.5;
+            Context.lineWidth = 0.8;
+            for (var i = 0; i < Taps.length; i++)
             {
+                Context.strokeStyle = "#000000";
+                for (var j = 0; j < 4; j++)
+                {
+                    if (Taps[i].Links[j] != -1)
+                    {
+                        Context.beginPath();
+                        Context.moveTo(miniMap.x + miniMap.w / 2 + Taps[i].x * 2 * miniMap.size, miniMap.y + miniMap.h / 2 + Taps[i].y * 2 * miniMap.size);
+                        switch (j)
+                        {
+                            case 0: Context.lineTo(miniMap.x + miniMap.w / 2 + Taps[i].x * 2 * miniMap.size, miniMap.y + miniMap.h / 2 + Taps[i].y * 2 * miniMap.size + miniMap.size); break;
+                            case 1: Context.lineTo(miniMap.x + miniMap.w / 2 + Taps[i].x * 2 * miniMap.size + miniMap.size, miniMap.y + miniMap.h / 2 + Taps[i].y * 2 * miniMap.size); break;
+                            case 2: Context.lineTo(miniMap.x + miniMap.w / 2 + Taps[i].x * 2 * miniMap.size, miniMap.y + miniMap.h / 2 + Taps[i].y * 2 * miniMap.size - miniMap.size); break;
+                            case 3: Context.lineTo(miniMap.x + miniMap.w / 2 + Taps[i].x * 2 * miniMap.size - miniMap.size, miniMap.y + miniMap.h / 2 + Taps[i].y * 2 * miniMap.size); break;
+                        }
+                        Context.stroke();
+                        Context.closePath();
+                    }
+                }
+                Context.globalAlpha = 0.9;
                 if (Taps[i].TapType == "Start") { Context.fillStyle = "#0000FF"; }
-                else if (Taps[i].TapType == "Boss") { Context.fillStyle = "#FF0000"; }
-                else { Context.fillStyle = "#000000" }
-                Context.fillRect(miniMap.x + miniMap.w / 2 - 2 + Taps[i].x * 10, miniMap.y + miniMap.h / 2 - 2 + Taps[i].y * 10, 4, 4);
+                else { Context.fillStyle = "#000000"; }
+                if (i == System.CurrentTap) { Context.fillStyle = "#FF0000"; }
+
+                if (Taps[i].TapType == "Boss")
+                {
+                    Context.fillRect(miniMap.x + miniMap.w / 2 - miniMap.size / 2 + Taps[i].x * 2 * miniMap.size, miniMap.y + miniMap.h / 2 - miniMap.size / 2 + Taps[i].y * 2 * miniMap.size, miniMap.size, miniMap.size);
+                }
+                else
+                {
+                    Context.fillRect(miniMap.x + miniMap.w / 2 - miniMap.size * 1 / 3 + Taps[i].x * 2 * miniMap.size, miniMap.y + miniMap.h / 2 - miniMap.size * 1 / 3 + Taps[i].y * 2 * miniMap.size, miniMap.size * 2 / 3, miniMap.size * 2 / 3);
+                }
             }
+            Context.lineWidth = 1;
             Context.globalAlpha = 1;
+            Context.fillStyle = "#000000";
+        }
+        function moveToOtherTap(i)
+        {
+            System.CurrentTap = Taps[System.CurrentTap].Links[i];
+            for (var j = 0; j < Taps.length; j++) {
+                Taps[j].x = Taps[j].y = 0;
+            }
+            tapLocationSet(Taps, System.CurrentTap, 0, 0);
+            for (var j = 0; j < Taps.length; j++) {
+                Taps[j].check = 0;
+            }
+            for (var j = 0; j < 4; j++) {
+                Link[j].active = false;
+            }
+            while (Ebullet.length > 0) {
+                var ball = Ebullet[0];
+                console.log(ball);
+                Ebullet.pop(ball);
+            }
+            if (i == 0 || i == 2) {
+                if (Player.y >= 300) { Player.y = 300 - (Player.y - 300) + 10; }
+                else if (Player.y < 300) { Player.y = 300 - (Player.y - 300) - 10; }
+            }
+            else {
+                if (Player.x >= 400) { Player.x = 400 - (Player.x - 400) + 10; }
+                else if (Player.x < 400) { Player.x = 400 - (Player.x - 400) - 10; }
+            }
         }
         function collision()
         {
+            //Player and Wall
+            for (var i = 0; i < Objects.length; i++)
+            {
+                if (collisionCirRec(Player, Objects[i]))
+                {
+                    alert("test");
+                }
+            }
 
+            //Player and EBullet
+
+            if (Taps[System.CurrentTap].Enemy == null) Taps[System.CurrentTap].clear = 1;
+            if (Taps[System.CurrentTap].clear == 1) //Player and Link
+            {
+                for (var i = 0; i < 4; i++) {
+                    if (Link[i].active == true && collisionCirCir(Player, Link[i])) {
+                        moveToOtherTap(i);
+                    }
+                }
+            }
+            else
+            {
+                //Player and Enemy
+
+                //Enemy and Wall
+
+                //Enemy and PBullet
+            }
+
+            //PBullet and Wall
+            //EBullet and Wall
+        }
+        function collisionCirCir(cir1, cir2) {
+            var dx;
+            var dy;
+            var dr;
+            dx = cir1.x - cir2.x;
+            dy = cir1.y - cir2.y;
+            dr = cir1.size + cir2.size;
+            dx = dx * dx;
+            dy = dy * dy;
+            dr = dr * dr;
+            if (dr > dx + dy)
+                return true;
+            return false;
+        }
+        function collisionCirRec(cir, rec) {
+            var check = false;
+            if (cir.x > rec.x && cir.y > rec.y && cir.x < rec.x + rec.w && cir.y < rec.y + rec.h) { check = true; }
+            else if ((rec.x - cir.x) * (rec.x - cir.x) + (rec.y - cir.y) * (rec.y - cir.y) < cir.size * cir.size) { check = true; }
+            else if ((rec.x + rec.w - cir.x) * (rec.x + rec.w - cir.x) + (rec.y - cir.y) * (rec.y - cir.y) < cir.size * cir.size) { check = true; }
+            else if ((rec.x - cir.x) * (rec.x - cir.x) + (rec.y + rec.h - cir.y) * (rec.y + rec.h - cir.y) < cir.size * cir.size) { check = true; }
+            else if ((rec.x + rec.w - cir.x) * (rec.x + rec.w - cir.x) + (rec.y + rec.h - cir.y) * (rec.y + rec.h - cir.y) < cir.size * cir.size) { check = true; }
+            else if (cir.y > rec.y && cir.y < rec.y + rec.h && rec.x - cir.x < cir.size) { check = true; }
+            else if (cir.x > rec.x && cir.x < rec.x + rec.w && rec.y - cir.y < cir.size) { check = true; }
+            else if (cir.y > rec.y && cir.y < rec.y + rec.h && cir.x - (rec.x + rec.w) < cir.size) { check = true; }
+            else if (cir.x > rec.x && cir.x < rec.x + rec.w && cir.y - (rec.y + rec.h) < cir.size) { check = true; }
+            return check;
         }
 
         function createBullet(Bx, By, Btype, BbulletType, Bspeed, Bangle, Bsize, Bspacial)
@@ -203,7 +343,6 @@
             else if (tempBall.type == "pBullet") {
                 Pbullet.push(tempBall);
             }
-            eBulletNum++;
         }
         function goReflectbullet(ball) {
             var radians = -ball.angle * Math.PI / 180;
@@ -222,7 +361,6 @@
             }
             if (ball.bs < 1) {
                 Ebullet.splice(Ebullet.findIndex(function (item) { return item === ball }), 1);
-                eBulletNum--;
             }
         }
         function goBigbullet(ball) {
@@ -247,7 +385,6 @@
                     createBullet(ball.x, ball.y, "eBullet", "repl", 80, -ball.angle + 360 / smalls * i, 2, 1);
                 }
                 Ebullet.splice(Ebullet.findIndex(function (item) { return item === ball }), 1);
-                eBulletNum--;
             }
         }
         function goSinbullet(ball)
@@ -282,43 +419,77 @@
         function createWindow(Taps)
         {
             createTap(Taps, 0, 0, -1);
+            Taps[Taps.length - 1].TapType = "Boss";
+            for (var j = 0; j < Taps.length; j++) {
+                Taps[j].x = Taps[j].y = 0;
+            }
             tapLocationSet(Taps, 0, 0, 0);
-            for (var i = 0; i < System.TapSize; i++)
+            for (var i = 0; i < Taps.length; i++)
             {
-                Taps[i].clear = 0;
+                Taps[i].check = 0;
             }
         }
-        function createTap(Taps, i, parantDirection, parantNum)
+        function createTap(Taps, i, parentDirection, parentNum)
         {
             var tap;
             if (i == 0) {
-                tap = { type: "Tap", TapType: "Start", Links: new Array(4), Enemy: null, clear: 0, x: 0, y: 0 };
+                tap = { type: "Tap", TapType: "Start", Links: new Array(4), Enemy: null, clear: 1, check: 0, x: 0, y: 0 };
                 Taps.push(tap);
                 tap.Links[0] = tap.Links[1] = tap.Links[2] = tap.Links[3] = -1;
-                tap.Links[parantDirection] = parantNum;
+                tap.Links[parentDirection] = parentNum;
                 for (var j = 0; j < 4; j++) {
                     if (tap.Links[j] == -1 && Taps.length < System.TapSize) {
+                        var c = false;
+                        var nx = tap.x;
+                        var ny = tap.y;
+                        switch (j) {
+                            case 0: ny++; break;
+                            case 1: nx++; break;
+                            case 2: ny--; break;
+                            case 3: nx--; break;
+                        }
+                        console.log("n:" + nx, ny);
+                        for (var k = 0; k < Taps.length; k++) {
+                            if (Taps[k].x == nx && Taps[k].y == ny) { c = true; }
+                        }
+                        if (c == true) { continue; }
                         tap.Links[j] = Taps.length;
                         createTap(Taps, Taps.length, (j + 2) % 4, i);
                     }
                 }
             }
-            else if (i == System.TapSize - 1)
-            {
-                tap = { type: "Tap", TapType: "Boss", Links: new Array(4), Enemy: null, clear: 0, x: 0, y: 0 };
-                Taps.push(tap);
-                tap.Links[0] = tap.Links[1] = tap.Links[2] = tap.Links[3] = -1;
-                tap.Links[parantDirection] = parantNum;
-            }
             else
             {
-                tap = { type: "Tap", TapType: "Normal", Links: new Array(4), Enemy: null, clear: 0, x: 0, y: 0 };
+                tap = { type: "Tap", TapType: "Normal", Links: new Array(4), Enemy: null, clear: 0, check: 0, x: 0, y: 0 };
                 Taps.push(tap);
                 tap.Links[0] = tap.Links[1] = tap.Links[2] = tap.Links[3] = -1;
-                tap.Links[parantDirection] = parantNum;
+                tap.Links[parentDirection] = parentNum;
+                tap.x = Taps[parentNum].x;
+                tap.y = Taps[parentNum].y;
+                switch (parentDirection) {
+                    case 0: tap.y--; break;
+                    case 1: tap.x--; break;
+                    case 2: tap.y++; break;
+                    case 3: tap.x++; break;
+                }
+                console.log("tap: " + tap.x, tap.y);
                 for (var j = 0; j < 4; j++) {
                     if (tap.Links[j] == -1 && Taps.length < System.TapSize) {
-                        if (Math.random() * 4 < 1)
+                        var c = false;
+                        var nx = tap.x;
+                        var ny = tap.y;
+                        switch (j) {
+                            case 0: ny++; break;
+                            case 1: nx++; break;
+                            case 2: ny--; break;
+                            case 3: nx--; break;
+                        }
+                        console.log("n:" + nx, ny);
+                        for (var k = 0; k < Taps.length; k++) {
+                            if (Taps[k].x == nx && Taps[k].y == ny) { c = true; }
+                        }
+                        if (c == true) { continue; }
+                        if (Math.random() < (Taps.length) / (System.TapSize * parentNum))
                         {
                             tap.Links[j] = Taps.length;
                             createTap(Taps, Taps.length, (j + 2) % 4, i);
@@ -332,22 +503,19 @@
         }
         function tapLocationSet(Taps, tapIdx, dx, dy)
         {
-            //console.log("Taps: " + Taps);
-            if (tapIdx > System.TapSize || tapIdx < 0) return;
+            if (tapIdx > Taps.length || tapIdx < 0) { return; }
             var tap = Taps[tapIdx];
-            if (tap.clear == 1) return;
+            console.log(tap);
+            if (tap.check == 1) { return; }
             console.log(tapIdx + " tap: " + Taps.indexOf(tap));
             tap.x = dx;
             tap.y = dy;
-            tap.clear = 1;
+            tap.check = 1;
 
             tapLocationSet(Taps, tap.Links[0], tap.x, tap.y + 1);
             tapLocationSet(Taps, tap.Links[1], tap.x + 1, tap.y);
             tapLocationSet(Taps, tap.Links[2], tap.x, tap.y - 1);
             tapLocationSet(Taps, tap.Links[3], tap.x - 1, tap.y);
-        }
-        function findEndTap(Taps)
-        {
         }
 
         var attcking = 0;
@@ -430,7 +598,7 @@
         }
         function drawRect(x, y, w, h, f) {
             Context.beginPath();
-            Context.rect(x - w / 2, y - h / 2, w*2, h);
+            Context.rect(x - w / 2, y - h / 2, w, h);
             Context.closePath();
             if (f == true) {
                 Context.fill();
