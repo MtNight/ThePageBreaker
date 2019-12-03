@@ -18,13 +18,27 @@
         var frame = 60;
         var deltaTime = 1 / frame;
 
-        var System = { Game: 0, Pause: 0, Life: 2, Bomb: 1, TapSize: 5 };
+        var System = { Game: 0, Pause: 0, Life: 2, Bomb: 1, TapSize: 5, CurrentTap: 0 };
         var Taps = new Array();
-        //createWindow(Taps);
+        createWindow(Taps);
+        var Link = new Array();
+        var tapCorrection = 1 / 15;
+        for (var i = 0; i < 4; i++)
+        {
+            var links = { type: "link", x: 400, y: 300, size: 8 };
+            switch (i)
+            {
+                case 0: links.y += Canvas.height * tapCorrection * 6; break;
+                case 1: links.x += Canvas.width * tapCorrection * 6; break;
+                case 2: links.y -= Canvas.height * tapCorrection * 6; break;
+                case 3: links.x -= Canvas.width * tapCorrection * 6; break;
+            }
+            Link.push(links);
+        }
 
-        var Objects = new Array();
         var Player = { type: "player", x: 400, y: 300, angle: 0, speed: 40, size: 8, dx: 0, dy: 0, attackCool: 0 };
-        var Cursor = { type: "player", x: 0, y: 0, angle: 0, size: 10}
+        var Cursor = { type: "player", x: 0, y: 0, angle: 0, size: 10 }
+        var Objects = new Array();
         var Enemies = new Array();
         var Pbullet = new Array();
         var Ebullet = new Array();
@@ -50,7 +64,7 @@
             if (Player.attackCool == 0 && attcking == 1) {
                 Player.attackCool = 1;
                 //createBullet(Player.x, Player.y, "eBullet", "sin", 80, Player.angle * 180 / Math.PI, 2, 3);
-                createBullet(Player.x, Player.y, "eBullet", "big", 80, Player.angle * 180 / Math.PI, 2, 1);
+                createBullet(Player.x, Player.y, "eBullet", "repl", 80, Player.angle * 180 / Math.PI, 2, 1);
                 setTimeout(function () { Player.attackCool = 0 }, deltaTime * 60 * 66);
             }
         }
@@ -64,9 +78,27 @@
             Context.strokeStyle = '#000000';
             Context.strokeRect(1, 1, Canvas.width - 2, Canvas.height - 2);
 
+            //tap
+            Context.fillStyle = "#CCCCCC";
+            Context.fillRect(Canvas.width * tapCorrection, Canvas.height * tapCorrection, Canvas.width * (1 - 2 * tapCorrection), Canvas.height * (1 - 2 * tapCorrection));
+            Context.strokeRect(Canvas.width * tapCorrection, Canvas.height * tapCorrection, Canvas.width * (1 - 2 * tapCorrection), Canvas.height * (1 - 2 * tapCorrection));
             Context.fillStyle = "#000000";
+            Context.globalAlpha = 0.7;
+            Context.font = "48px serif";
+            Context.fillText(System.CurrentTap, Canvas.width/2-14, Canvas.height/2+16);
+            Context.globalAlpha = 1;
 
-            Context.fillStyle = "#000000";
+            //Link(door)
+            for (var i = 0; i < 4; i++) {
+                if (Taps[System.CurrentTap].Links[i] != -1)
+                {
+                    if (Taps[Taps[System.CurrentTap].Links[i]].TapType == "Start") { Context.strokeStyle = "#0000FF"; }
+                    else if (Taps[Taps[System.CurrentTap].Links[i]].TapType == "Boss") { Context.strokeStyle = "#FF0000"; }
+                    else { Context.strokeStyle = "#000000" }
+                    drawCircle(Link[i].x, Link[i].y, Link[i].size, 0, Math.PI * 2, false);
+                    Context.strokeStyle = "#000000"
+                }
+            }
 
             //Bullets
             var ball;
@@ -131,6 +163,21 @@
             Context.lineTo(Player.x + (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.cos(Player.angle) + (Cursor.size / 2) * Math.sin(Player.angle), Player.y - (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.sin(Player.angle) + (Cursor.size / 2) * Math.cos(Player.angle));
             Context.closePath();
             Context.fill();
+
+            //map
+            Context.globalAlpha = 0.5;
+            Context.fillStyle = "#CCCCCC";
+            var miniMap = { x: 10, y: 10, w: 80, h: 80 };
+            Context.fillRect(miniMap.x, miniMap.y, miniMap.w, miniMap.h);
+            Context.globalAlpha = 0.8;
+            for (var i = 0; i < System.TapSize; i++)
+            {
+                if (Taps[i].TapType == "Start") { Context.fillStyle = "#0000FF"; }
+                else if (Taps[i].TapType == "Boss") { Context.fillStyle = "#FF0000"; }
+                else { Context.fillStyle = "#000000" }
+                Context.fillRect(miniMap.x + miniMap.w / 2 - 2 + Taps[i].x * 10, miniMap.y + miniMap.h / 2 - 2 + Taps[i].y * 10, 4, 4);
+            }
+            Context.globalAlpha = 1;
         }
         function collision()
         {
@@ -232,33 +279,76 @@
             ball.x = ball.x + 1;
         }
 
-        //function createWindow(Taps)
-        //{
-        //    createTap(0);
-        //}
-        //function createTap(i)
-        //{
-        //    var tap;
-        //    if (i == 0) {
-        //        tap = { type: "Tap", TapType: "Normal", Links: new Array(4), Enemy: null, clear: 0 };
-        //        Links[0] = Links[1] = Links[2] = Links[3] = -1;
-        //        for (var j = 0; j < 4; j++) {
-        //            if (Links[j] == -1 && i < System.TapSize) {
-        //                createTap(Taps.length + 1);
-        //            }
-        //        }
-        //        Taps.push(tap);
-        //    }
-        //    else if (i == System.TapSize - 1)
-        //    {
-        //    }
-        //    else
-        //    {
-        //    }
-        //}
-        //function findEndTap(Taps)
-        //{
-        //}
+        function createWindow(Taps)
+        {
+            createTap(Taps, 0, 0, -1);
+            tapLocationSet(Taps, 0, 0, 0);
+            for (var i = 0; i < System.TapSize; i++)
+            {
+                Taps[i].clear = 0;
+            }
+        }
+        function createTap(Taps, i, parantDirection, parantNum)
+        {
+            var tap;
+            if (i == 0) {
+                tap = { type: "Tap", TapType: "Start", Links: new Array(4), Enemy: null, clear: 0, x: 0, y: 0 };
+                Taps.push(tap);
+                tap.Links[0] = tap.Links[1] = tap.Links[2] = tap.Links[3] = -1;
+                tap.Links[parantDirection] = parantNum;
+                for (var j = 0; j < 4; j++) {
+                    if (tap.Links[j] == -1 && Taps.length < System.TapSize) {
+                        tap.Links[j] = Taps.length;
+                        createTap(Taps, Taps.length, (j + 2) % 4, i);
+                    }
+                }
+            }
+            else if (i == System.TapSize - 1)
+            {
+                tap = { type: "Tap", TapType: "Boss", Links: new Array(4), Enemy: null, clear: 0, x: 0, y: 0 };
+                Taps.push(tap);
+                tap.Links[0] = tap.Links[1] = tap.Links[2] = tap.Links[3] = -1;
+                tap.Links[parantDirection] = parantNum;
+            }
+            else
+            {
+                tap = { type: "Tap", TapType: "Normal", Links: new Array(4), Enemy: null, clear: 0, x: 0, y: 0 };
+                Taps.push(tap);
+                tap.Links[0] = tap.Links[1] = tap.Links[2] = tap.Links[3] = -1;
+                tap.Links[parantDirection] = parantNum;
+                for (var j = 0; j < 4; j++) {
+                    if (tap.Links[j] == -1 && Taps.length < System.TapSize) {
+                        if (Math.random() * 4 < 1)
+                        {
+                            tap.Links[j] = Taps.length;
+                            createTap(Taps, Taps.length, (j + 2) % 4, i);
+                            //var nTap = createTap(Taps, Taps.length);
+                        }
+                    }
+                }
+            }
+            console.log(i, tap);
+            return tap;
+        }
+        function tapLocationSet(Taps, tapIdx, dx, dy)
+        {
+            //console.log("Taps: " + Taps);
+            if (tapIdx > System.TapSize || tapIdx < 0) return;
+            var tap = Taps[tapIdx];
+            if (tap.clear == 1) return;
+            console.log(tapIdx + " tap: " + Taps.indexOf(tap));
+            tap.x = dx;
+            tap.y = dy;
+            tap.clear = 1;
+
+            tapLocationSet(Taps, tap.Links[0], tap.x, tap.y + 1);
+            tapLocationSet(Taps, tap.Links[1], tap.x + 1, tap.y);
+            tapLocationSet(Taps, tap.Links[2], tap.x, tap.y - 1);
+            tapLocationSet(Taps, tap.Links[3], tap.x - 1, tap.y);
+        }
+        function findEndTap(Taps)
+        {
+        }
 
         var attcking = 0;
         function onKeyDownFunc(e)
