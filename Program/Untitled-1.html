@@ -42,15 +42,16 @@
         function makeEne(ty,x1,y1)
         {
             var mkene;
+            var esize = 15;
             EnemieNUm++;
             if(ty==1)
-                mkene = {type:1,x:x1,y:y1,mSpeed:20,aSpeed:5,bullet:1,heart:20};
+                mkene = {type:1,x:x1,y:y1,mSpeed:20,aSpeed:5,bullet:1,heart:20,w:esize,h:esize};
             else if(ty == 2)
-                mkene = {type:2,x:x1,y:y1,mSpeed:24,aSpeed:5,bullet:1,heart:16};
+                mkene = {type:2,x:x1,y:y1,mSpeed:24,aSpeed:5,bullet:1,heart:16,w:esize,h:esize};
             else if(ty == 3)
-                mkene = {type:3,x:x1,y:y1,mSpeed:0,aSpeed:10,bullet:2,heart:80};
+                mkene = {type:3,x:x1,y:y1,mSpeed:0,aSpeed:10,bullet:2,heart:80,w:esize*12,h:esize*12};
             else if(ty == 4)
-                mkene = {type:4,x:x1,y:y1,mSpeed:0,aSpeed:10,bullet:1,heart:40};
+                mkene = {type:4,x:x1,y:y1,mSpeed:0,aSpeed:10,bullet:1,heart:40,w:esize*4,h:esize*4};
         
             Enemies.push(mkene);
         }
@@ -65,7 +66,7 @@
             draw();
             //collision
             var pl = {x : Player.x ,y :Player.y ,r : Player.size};
-            var ga = {x:Enemies[2].x,y:Enemies[2].y,w:8*16,h:8*16};
+            var ga = {x:Enemies[2].x,y:Enemies[2].y,w:Enemies[2].w,h:Enemies[2].h};
             collisionCirRec(pl,ga);
             //stat
 
@@ -92,15 +93,15 @@
             //Enemy
             for(var i = 0;i<EnemieNUm;i++)
             {
-                var esize = 8;
+                var esize = 15;
                 if(Enemies[i].type==1)
-                    drawRect(Enemies[i].x,Enemies[i].y,esize,esize,true);
+                    drawRect(Enemies[i].x,Enemies[i].y,Enemies[i].w,Enemies[i].w,true);
                 else if(Enemies[i].type==2)
-                    drawRhombus(Enemies[i].x,Enemies[i].y,esize,esize,true);
+                    drawRhombus(Enemies[i].x,Enemies[i].y,Enemies[i].w,Enemies[i].h,true);
                 else if(Enemies[i].type==3)
-                    drawRect(Enemies[i].x,Enemies[i].y,esize*4*4,esize*4*4,true);
+                    drawRect(Enemies[i].x,Enemies[i].y,Enemies[i].w,Enemies[i].h,true);
                 else if(Enemies[i].type==4)
-                    drawRhombus(Enemies[i].x,Enemies[i].y,esize*4,esize*4,true);
+                    drawRhombus(Enemies[i].x,Enemies[i].y,Enemies[i].w,Enemies[i].h,true);
             }
             //Bullets
             var ball;
