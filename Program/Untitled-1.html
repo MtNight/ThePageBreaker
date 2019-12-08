@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -222,39 +222,39 @@
 
             if(cir.x>rec.x&&cir.y>rec.y&&cir.x<rec.x+rec.w&&cir.y<rec.y+rec.h)
             {
-                alert("어1");
+                alert("어1");    //안
             }
             else if((rec.x-cir.x)*(rec.x-cir.x)+(rec.y-cir.y)*(rec.y-cir.y)<cir.r*cir.r)
             {
-                alert("어2");
+                alert("어2");    //왼위
             }
             else if((rec.x+rec.w-cir.x)*(rec.x+rec.w-cir.x)+(rec.y-cir.y)*(rec.y-cir.y)<cir.r*cir.r)
             {
-                alert("어3");
+                alert("어3");    //우위
             }
             else if((rec.x-cir.x)*(rec.x-cir.x)+(rec.y+rec.h-cir.y)*(rec.y+rec.h-cir.y)<cir.r*cir.r)
             {
-                alert("어4");
+                alert("어4");    //왼아래
             }
             else if((rec.x+rec.w-cir.x)*(rec.x+rec.w-cir.x)+(rec.y+rec.h-cir.y)*(rec.y+rec.h-cir.y)<cir.r*cir.r)
             {
-                alert("어5");
+                alert("어5");    //우아래
             }
             else if(cir.y>rec.y&&cir.y<rec.y+rec.h&&rec.x-cir.x<cir.r&&rec.x-cir.x>0)
             {
-                alert("어6");
+                alert("어6");    //왼쪽
             }
             else if(cir.x>rec.x&&cir.x<rec.x+rec.w&&rec.y-cir.y>0&&rec.y-cir.y<cir.r)
             {
-                alert("어7");
+                alert("어7");    //위
             }
             else if(cir.y>rec.y&&cir.y<rec.y+rec.h&&cir.x-(rec.x+rec.w)>0&&cir.x-(rec.x+rec.w)<cir.r)
             {
-                alert("어8");
+                alert("어8");//우측
             }
             else if(cir.x>rec.x&&cir.x<rec.x+rec.w&&cir.y-(rec.y+rec.h)<cir.r&&cir.y-(rec.y+rec.h)>0)
             {
-                alert("어9");
+                alert("어9"); //아래
             }
         }
 
