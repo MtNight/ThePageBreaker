@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -30,44 +30,65 @@
         var Pbullet = new Array();
         var Ebullet = new Array();
 
-        var eBulletNum = 10;
+        var eBulletNum = 0;
         var tempBall;
-        for (var i = 0; i < eBulletNum; i++)
+        /*for (var i = 0; i < eBulletNum; i++)
         {
-            var tempAngle = Math.floor(Math.random() * 360);
-            tempBall = { type: "eBullet", bulletType: "repl", x: 100, y: 100, angle: tempAngle, speed: 20, size: 5, dx: 0, dy: 0, bs: 0}
+            //var tempAngle = Math.floor(Math.random() * 360);
+            var tempAngle = Math.PI/4;
+            tempAngle += Math.PI/2*i;
+            tempBall = { type: "eBullet", bulletType: "nor", x: Player.x, y: Player.y, angle: tempAngle, speed: 20, size: 5, dx: 0, dy: 0, bs: 0}
             Ebullet.push(tempBall);
-        }
-        Ebullet[0].bulletType = "sin";
+        }*/
+    
         function makeEne(ty,x1,y1)
         {
             var mkene;
             var esize = 15;
             EnemieNUm++;
-            if(ty==1)
-                mkene = {type:1,x:x1,y:y1,mSpeed:20,aSpeed:5,bullet:1,heart:20,w:esize,h:esize};
-            else if(ty == 2)
-                mkene = {type:2,x:x1,y:y1,mSpeed:24,aSpeed:5,bullet:1,heart:16,w:esize,h:esize};
+            if (ty == 1) {
+                mkene = { type: 1, x: x1, y: y1, mSpeed: 20, aSpeed: 5, bullet: 1, heart: 20, w: esize, h: esize };
+                var pi = Math.PI;
+                var ang = pi / 4;
+                for (var n = 0; n < 4; n++) {
+                    createBullet(mkene.x + mkene.w / 2, mkene.y + mkene.h / 2, "eBullet", "nor", 3, ang, 3, 2);
+                    ang = ang+pi/2;
+                }
+            }
+            else if (ty == 2) {
+                mkene = { type: 2, x: x1, y: y1, mSpeed: 24, aSpeed: 5, bullet: 1, heart: 16, w: esize, h: esize };
+                mkene = { type: 1, x: x1, y: y1, mSpeed: 20, aSpeed: 5, bullet: 1, heart: 20, w: esize, h: esize };
+                var pi = Math.PI;
+                var ang = 0;
+                for (var n = 0; n < 4; n++) {
+                    createBullet(mkene.x + mkene.w / 2, mkene.y + mkene.h / 2, "eBullet", "sin", 3, ang, 3, 2);
+                    ang = ang + pi / 2;
+                }
+            }
             else if(ty == 3)
                 mkene = {type:3,x:x1,y:y1,mSpeed:0,aSpeed:10,bullet:2,heart:80,w:esize*12,h:esize*12};
             else if(ty == 4)
                 mkene = {type:4,x:x1,y:y1,mSpeed:0,aSpeed:10,bullet:1,heart:40,w:esize*4,h:esize*4};
-        
+            else if(ty == 5)
+                mkene = {type:5,x:x1,y:y1,mSpeed:0,aSpeed:10,bullet:1,heart:40,w:esize*4,h:esize*4};
             Enemies.push(mkene);
         }
-        for(var i = 1;i<5;i++)
+        for(var i = 1;i<6;i++)
         {
-            makeEne(i,150*i,100);
+            makeEne(i,100*i,100);
         }
 
         setInterval(update, deltaTime);
         function update()
         {
             draw();
+            /*for(var i=0;i<5;i++)
+            {
+                Enemies[i].x++;
+                Enemies[i].y++;
+            }*/
             //collision
-            var pl = {x : Player.x ,y :Player.y ,r : Player.size};
-            var ga = {x:Enemies[2].x,y:Enemies[2].y,w:Enemies[2].w,h:Enemies[2].h};
-            collisionCirRec(pl,ga);
+    
             //stat
 
             //Pattack
@@ -95,13 +116,20 @@
             {
                 var esize = 15;
                 if(Enemies[i].type==1)
+                {
                     drawRect(Enemies[i].x,Enemies[i].y,Enemies[i].w,Enemies[i].w,true);
+                }
                 else if(Enemies[i].type==2)
                     drawRhombus(Enemies[i].x,Enemies[i].y,Enemies[i].w,Enemies[i].h,true);
                 else if(Enemies[i].type==3)
                     drawRect(Enemies[i].x,Enemies[i].y,Enemies[i].w,Enemies[i].h,true);
                 else if(Enemies[i].type==4)
                     drawRhombus(Enemies[i].x,Enemies[i].y,Enemies[i].w,Enemies[i].h,true);
+                else if(Enemies[i].type==5)
+                {
+                    drawRect(Enemies[i].x,Enemies[i].y,Enemies[i].w,Enemies[i].h,true);
+                    drawTri(Enemies[i].x,Enemies[i].y,Enemies[i].w,Enemies[i].h,true);
+                }
             }
             //Bullets
             var ball;
@@ -115,6 +143,10 @@
                 else if (ball.bulletType == "repl")
                 {
                     goReflectbullet(ball);
+                }
+                else if(ball.bulletType == "nor")
+                {
+                    goNormalbullet(ball);
                 }
                 drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
             }
@@ -159,6 +191,7 @@
             Context.fill();
 
         }
+        
         function createBullet(Bx, By, Btype, BbulletType, Bspeed, Bangle, Bsize, Bspacial)
         {
             var tempBall = { type: Btype, bulletType: BbulletType, x: Bx, y: By, angle: Bangle, speed: Bspeed, size: Bsize, dx: 0, dy: 0, bs: Bspacial }
@@ -174,6 +207,12 @@
                 Pbullet.push(tempBall);
             }
             eBulletNum++;
+        }
+        function goNormalbullet(ball)
+        {   
+            var rad = ball.angle;
+            ball.x = ball.x + Math.cos(rad);
+            ball.y = ball.y + Math.sin(rad);
         }
         function goReflectbullet(ball) {
             var radians = -ball.angle * Math.PI / 180;
@@ -194,7 +233,7 @@
         }
         function goSinbullet(ball)
         {
-            ball.speed = 20;
+            /*ball.speed = 20;
             ball.x += ball.speed * deltaTime;
             ball.y = 100 + ball.dy + Math.sin(ball.bs * 0.1 * Math.PI) * 10;
             ball.bs += ball.speed * deltaTime;
@@ -202,6 +241,14 @@
             {
                 ball.x = ball.dx;
                 ball.y = ball.dy;
+            }*/
+            for(var i=0;i<4;i++)
+            {
+                if(i==0)
+                {
+                    ball.x +=1;
+                    ball.y = ball.y
+                }
             }
         }
         function collisioneCirCir(cir1,cir2)
@@ -223,39 +270,39 @@
 
             if(cir.x>rec.x&&cir.y>rec.y&&cir.x<rec.x+rec.w&&cir.y<rec.y+rec.h)
             {
-                alert("어1");    //안
+                alert("어1");
             }
             else if((rec.x-cir.x)*(rec.x-cir.x)+(rec.y-cir.y)*(rec.y-cir.y)<cir.r*cir.r)
             {
-                alert("어2");    //왼위
+                alert("어2");
             }
             else if((rec.x+rec.w-cir.x)*(rec.x+rec.w-cir.x)+(rec.y-cir.y)*(rec.y-cir.y)<cir.r*cir.r)
             {
-                alert("어3");    //우위
+                alert("어3");
             }
             else if((rec.x-cir.x)*(rec.x-cir.x)+(rec.y+rec.h-cir.y)*(rec.y+rec.h-cir.y)<cir.r*cir.r)
             {
-                alert("어4");    //왼아래
+                alert("어4");
             }
             else if((rec.x+rec.w-cir.x)*(rec.x+rec.w-cir.x)+(rec.y+rec.h-cir.y)*(rec.y+rec.h-cir.y)<cir.r*cir.r)
             {
-                alert("어5");    //우아래
+                alert("어5");
             }
             else if(cir.y>rec.y&&cir.y<rec.y+rec.h&&rec.x-cir.x<cir.r&&rec.x-cir.x>0)
             {
-                alert("어6");    //왼쪽
+                alert("어6");
             }
             else if(cir.x>rec.x&&cir.x<rec.x+rec.w&&rec.y-cir.y>0&&rec.y-cir.y<cir.r)
             {
-                alert("어7");    //위
+                alert("어7");
             }
             else if(cir.y>rec.y&&cir.y<rec.y+rec.h&&cir.x-(rec.x+rec.w)>0&&cir.x-(rec.x+rec.w)<cir.r)
             {
-                alert("어8");//우측
+                alert("어8");
             }
             else if(cir.x>rec.x&&cir.x<rec.x+rec.w&&cir.y-(rec.y+rec.h)<cir.r&&cir.y-(rec.y+rec.h)>0)
             {
-                alert("어9"); //아래
+                alert("어9");
             }
         }
 
@@ -386,6 +433,44 @@
             Context.rotate(Math.PI/4);
             Context.fillRect(0,0,w,h);
             Context.setTransform(1,0,0,1,0,0);
+        }
+        function drawTri(x,y,w,h,f)
+        {
+            var w1 = w / 4;
+            var h1 = h / 4;
+            var r2 = Math.sqrt(2);
+            for (var i = 0; i < 4; i++) {
+                Context.beginPath();
+                Context.moveTo(x + w1 * i, y);
+                Context.lineTo(x + w1 / 2 + w1 * i, y - h1 / 2 * r2);
+                Context.lineTo(x + w1 + w1 * i, y);
+                Context.closePath();
+                Context.fill();
+            }
+            for (var i = 0; i < 4; i++) {
+                Context.beginPath();
+                Context.moveTo(x + w1 * i, y + h);
+                Context.lineTo(x + w1 / 2 + w1 * i, y + h1 / 2 * r2 + h);
+                Context.lineTo(x + w1 + w1 * i, y + h);
+                Context.closePath();
+                Context.fill();
+            }
+            for (var i = 0; i < 4; i++) {
+                Context.beginPath();
+                Context.moveTo(x, y + h1 * i);
+                Context.lineTo(x - (w1 / 2*r2), y + h1 / 2  + h1 * i);
+                Context.lineTo(x, y + h1 * i + h1);
+                Context.closePath();
+                Context.fill();
+            }
+            for (var i = 0; i < 4; i++) {
+                Context.beginPath();
+                Context.moveTo(x + w, y + h1 * i);
+                Context.lineTo(x + w + w1 / 2 * r2, y + h1 / 2 + h1 * i);
+                Context.lineTo(x + w, y + h1 * i + h1);
+                Context.closePath();
+                Context.fill();
+            }
         }
     }
 
