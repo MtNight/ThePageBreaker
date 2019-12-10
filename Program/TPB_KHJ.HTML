@@ -172,6 +172,7 @@
         }
         Ebullet[0].bulletType = "sin";
 
+        //setInterval(addBullet, 5000);
         setTimeout(update, deltaTime);
         function update()
         {
@@ -181,6 +182,14 @@
                 //createBullet(Player.x, Player.y, "eBullet", "sin", 80, Player.angle * 180 / Math.PI, 2, 3);
                 createBullet(Player.x, Player.y, "pBullet", "repl", 80, Player.angle * 180 / Math.PI, 2, 1);
                 setTimeout(function () { Player.attackCool = 0 }, deltaTime * 60 * 66);
+            }
+            for (var i = 0; i < Taps[System.CurrentTap].Enemy.length; i++) {
+                if (Taps[System.CurrentTap].Enemy[i].type == "square1")
+                    emoving1(Taps[System.CurrentTap].Enemy[i]);
+                if (Taps[System.CurrentTap].Enemy[i].type == "square2")
+                    emoving1(Taps[System.CurrentTap].Enemy[i]);
+                if (Taps[System.CurrentTap].Enemy[i].type == "square5")
+                    emoving3(Taps[System.CurrentTap].Enemy[i]);
             }
 
             collision();
@@ -276,18 +285,21 @@
             Context.strokeStyle = "#FFFFFF";
 
             //Enemy
+            Context.fillStyle = "#FFFFFF";
             for (var i = 0; i < Taps[System.CurrentTap].Enemy.length; i++)
             {
                 var enemy = Taps[System.CurrentTap].Enemy[i];
-                switch (enemy.EnemyType)
+                console.log(enemy);
+                switch (enemy.type)
                 {
-                    case "square1": drawRect(enemy.x, enemy.y, enemy.size, enemy.size, true); break;
-                    case "square2": drawRect(enemy.x, enemy.y, enemy.size, enemy.size, true); break;
-                    case "square3": drawRect(enemy.x, enemy.y, enemy.size, enemy.size, true); break;
-                    case "square4": drawRect(enemy.x, enemy.y, enemy.size, enemy.size, true); break;
-                    case "square5": drawRect(enemy.x, enemy.y, enemy.size, enemy.size, true); break;
-                    case "squareBoss": drawRect(enemy.x, enemy.y, enemy.size, enemy.size, true); break;
-                    case "squareBu": drawRect(enemy.x, enemy.y, enemy.size, enemy.size, true); break;
+                    case "square1": drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
+                    case "square2": drawRhombus(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
+                    case "square3": /*drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true);*/ break;
+                    case "square4": /*drawRhombus(enemy.x, enemy.y, enemy.w, enemy.h, true);*/ break;
+                    case "square5": { /*drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true);*/ drawTri(enemy.x, enemy.y, enemy.w, enemy.h, true); } break;
+                    case "squareBoss": //drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
+                    case "squareBu": //drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
+                    default: break;
                 }
             }
 
@@ -485,7 +497,7 @@
             {
                 for (var j = 0; j < Taps[System.CurrentTap].Enemy.length; j++) {
                     //Player and Enemy
-                    if (collisionCirRec(Player, Taps[System.CurrentTap].Enemy[j]))
+                    if (collisionCirRec(Player, Taps[System.CurrentTap].Enemy[j]) != "OUT")
                     {
                         playerDie();
                     }
@@ -611,6 +623,7 @@
 
             if (tempBall.type == "eBullet")
             {
+                console.log(tempBall);
                 Ebullet.push(tempBall);
             }
             else if (tempBall.type == "pBullet") {
@@ -718,6 +731,10 @@
                         createTap(Taps, Taps.length, ((randDir + j) % 4 + 2) % 4, i);
                     }
                 }
+
+                for (var i = 1; i < 6; i++) {
+                    tap.Enemy.push(makeEne(i, 100 * i, 100));
+                }
             }
             else
             {
@@ -772,6 +789,171 @@
             tapLocationSet(Taps, tap.Links[1], tap.x + 1, tap.y);
             tapLocationSet(Taps, tap.Links[2], tap.x, tap.y - 1);
             tapLocationSet(Taps, tap.Links[3], tap.x - 1, tap.y);
+        }
+
+        function makeEne(ty, x1, y1) {
+            var mkene;
+            var esize = 15;
+            if (ty == 1) {
+                mkene = { type: "square1", x: x1, y: y1, mSpeed: 20, aSpeed: 5, bullet: 1, heart: 20, w: esize, h: esize };
+            }
+            else if (ty == 2) {
+                mkene = { type: "square2", x: x1, y: y1, mSpeed: 24, aSpeed: 5, bullet: 1, heart: 16, w: esize, h: esize };
+            }
+            else if (ty == 3)
+                mkene = { type: "square3", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 2, heart: 80, w: esize * 12, h: esize * 12 };
+            else if (ty == 4)
+                mkene = { type: "square4", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, w: esize * 4, h: esize * 4 };
+            else if (ty == 5)
+                mkene = { type: "square5", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, w: esize * 4, h: esize * 4, ran: -1 };
+            console.log(mkene);
+            return mkene;
+        }
+        function addBullet() {
+            for (var i = 0; i < Taps[System.CurrentTap].Enemy.length; i++) {
+                var enemy = Taps[System.CurrentTap].Enemy[i];
+                if (enemy.type == "square1") {
+                    var ang = 45;
+                    for (var n = 0; n < 4; n++) {
+                        createBullet(enemy.x, enemy.y, "eBullet", "repl", 100, ang, 3, 1);
+                        ang += 90;
+                    }
+                }
+                if (enemy.type == "square2") {
+                    var ang = 0;
+                    for (var n = 0; n < 4; n++) {
+                        createBullet(enemy.x, enemy.y, "eBullet", "sin", 30, ang, 3, 2);
+                        ang += 90;
+                    }
+                }
+                if (enemy.type == "square3") {
+                    var random = Math.floor(Math.random() * 4) + 1;
+                    for (var n = 0; n < 10; n++) {
+                        ////console.log(enemy.x + enemy.w / 2+n*3);
+                        //if (random == 1)
+                        //    createBullet(enemy.x + n * 3 + enemy.w / 2, enemy.y + enemy.h / 2, "eBullet", "lazor", 3, random, 3, 2);
+                        //else if (random == 2)
+                        //    createBullet(enemy.x - n * 3 + enemy.w / 2, enemy.y + enemy.h / 2, "eBullet", "lazor", 3, random, 3, 2);
+                        //else if (random == 3)
+                        //    createBullet(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2 + n * 3, "eBullet", "lazor", 3, random, 3, 2);
+                        //else if (random == 4)
+                        //    createBullet(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2 - n * 3, "eBullet", "lazor", 3, random, 3, 2);
+                    }
+                }
+            }
+        }
+        function emoving1(Enemy) {
+            var x1 = Enemy.x - Player.x;
+            var y1 = Enemy.y - Player.y;
+            var i = Math.sqrt(x1 * x1 + y1 * y1);
+            if (i > 100) {
+                if (x1 <= 0 && y1 <= 0) {
+                    Enemy.x += 0.1;
+                    Enemy.y += 0.1;
+                }
+                else if (x1 <= 0 && y1 > 0) {
+                    Enemy.x += 0.1;
+                    Enemy.y -= 0.1;
+                }
+                else if (x1 > 0 && y1 <= 0) {
+                    Enemy.x -= 0.1;
+                    Enemy.y += 0.1;
+                }
+                else {
+                    Enemy.x -= 0.1;
+                    Enemy.y -= 0.1;
+                }
+            }
+            else {
+
+            }
+            if (Enemy.x <= 0)
+                Enemy.x = 0;
+            if (Enemy.x + Enemy.w >= Canvas.width)
+                Enemy.x = Canvas.width - Enemy.w - 1;
+            if (Enemy.y <= 0)
+                Enemy.y = 0;
+            if (Enemy.y + Enemy.h >= Canvas.height)
+                Enemy.y = Canvas.height - Enemy.h - 1;
+        }
+        function emoving2(Enemy) {
+            var x1 = Enemy.x - Player.x;
+            var y1 = Enemy.y - Player.y;
+            var i = Math.sqrt(x1 * x1 + y1 * y1);
+            if (i > 100) {
+                if (x1 <= 0 && y1 <= 0) {
+                    Enemy.x -= 0.1;
+                    Enemy.y -= 0.1;
+                }
+                else if (x1 <= 0 && y1 > 0) {
+                    Enemy.x -= 0.1;
+                    Enemy.y += 0.1;
+                }
+                else if (x1 > 0 && y1 <= 0) {
+                    Enemy.x += 0.1;
+                    Enemy.y -= 0.1;
+                }
+                else {
+                    Enemy.x += 0.1;
+                    Enemy.y += 0.1;
+                }
+            }
+            else {
+
+            }
+            if (Enemy.x <= 0)
+                Enemy.x = 0;
+            if (Enemy.x + Enemy.w >= Canvas.width)
+                Enemy.x = Canvas.width - Enemy.w - 1;
+            if (Enemy.y <= 0)
+                Enemy.y = 0;
+            if (Enemy.y + Enemy.h >= Canvas.height)
+                Enemy.y = Canvas.height - Enemy.h - 1;
+        }
+        function emoving3(Enemy) {
+            var random = Math.floor(Math.random() * 2) + 1;
+            if (Enemy.ran == -1) {
+                if (random == 1) {
+                    if (Player.x >= Enemy.x + Enemy.w / 2)
+                        Enemy.ran = 1;
+                    else
+                        Enemy.ran = 2;
+                }
+                else {
+                    if (Player.y >= Enemy.y + Enemy.h / 2)
+                        Enemy.ran = 3;
+                    else
+                        Enemy.ran = 4;
+                }
+            }
+            if (Enemy.ran == 1) {
+                Enemy.x -= 0.1;
+            }
+            else if (Enemy.ran == 2) {
+                Enemy.x += 0.1;
+            }
+            else if (Enemy.ran == 3) {
+                Enemy.y -= 0.1;
+            }
+            else if (Enemy.ran == 4) {
+                Enemy.y += 0.1;
+            }
+            if (Enemy.x - (Enemy.w / 8 * Math.sqrt(2)) <= 0) {
+                Enemy.ran = -1;
+                Enemy.x += 0.1;
+            }
+            if (Enemy.x + (Enemy.w / 8 * Math.sqrt(2)) + Enemy.w >= Canvas.width) {
+                Enemy.ran = -1;
+                Enemy.x -= 0.1;
+            }
+            if (Enemy.y - (Enemy.h / 8 * Math.sqrt(2)) <= 0) {
+                Enemy.ran = -1;
+                Enemy.y += 0.1;
+            }
+            if (Enemy.y + (Enemy.h / 8 * Math.sqrt(2)) + Enemy.h >= Canvas.height) {
+                Enemy.ran = -1;
+                Enemy.y -= 0.1;
+            }
         }
 
         var attcking1, attcking2, slowMove;
@@ -890,6 +1072,43 @@
             Context.rotate(Math.PI / 4);
             Context.fillRect(0, 0, w, h);
             Context.setTransform(1, 0, 0, 1, 0, 0);
+        }
+        function drawTri(x, y, w, h, f) {
+            var w1 = w / 4;
+            var h1 = h / 4;
+            var r2 = Math.sqrt(2);
+            for (var i = 0; i < 4; i++) {
+                Context.beginPath();
+                Context.moveTo(x + w1 * i, y);
+                Context.lineTo(x + w1 / 2 + w1 * i, y - h1 / 2 * r2);
+                Context.lineTo(x + w1 + w1 * i, y);
+                Context.closePath();
+                Context.fill();
+            }
+            for (var i = 0; i < 4; i++) {
+                Context.beginPath();
+                Context.moveTo(x + w1 * i, y + h);
+                Context.lineTo(x + w1 / 2 + w1 * i, y + h1 / 2 * r2 + h);
+                Context.lineTo(x + w1 + w1 * i, y + h);
+                Context.closePath();
+                Context.fill();
+            }
+            for (var i = 0; i < 4; i++) {
+                Context.beginPath();
+                Context.moveTo(x, y + h1 * i);
+                Context.lineTo(x - (w1 / 2 * r2), y + h1 / 2 + h1 * i);
+                Context.lineTo(x, y + h1 * i + h1);
+                Context.closePath();
+                Context.fill();
+            }
+            for (var i = 0; i < 4; i++) {
+                Context.beginPath();
+                Context.moveTo(x + w, y + h1 * i);
+                Context.lineTo(x + w + w1 / 2 * r2, y + h1 / 2 + h1 * i);
+                Context.lineTo(x + w, y + h1 * i + h1);
+                Context.closePath();
+                Context.fill();
+            }
         }
     }
 
