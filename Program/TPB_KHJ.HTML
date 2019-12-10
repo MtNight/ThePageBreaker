@@ -11,8 +11,8 @@
     </style>
 
     <script type="text/javascript">
-        //window.addEventListener('load', game, false);
-        window.addEventListener('load', menu, false);
+        window.addEventListener('load', game, false);
+        //window.addEventListener('load', menu, false);
     function menu()
     {
         document.onkeydown = onKeyDownToStart;
@@ -60,6 +60,7 @@
                 Context.translate(x + Math.cos(Math.PI / 180 * (135 - t)) * s * Math.sqrt(2) / 2, y + Math.sin(Math.PI / 180 * (135 - t)) * s * Math.sqrt(2) / 2);
                 Context.rotate(-t * Math.PI / 180);
                 Context.strokeRect(0, 0, s, -s);
+                //Context.fillRect(0, 0, s, -s);
                 Context.setTransform(1, 0, 0, 1, 0, 0);
             }
 
@@ -78,7 +79,7 @@
             Context.globalCompositeOperation = "source-over";
             theta += 0.00025*s;
 
-            if (s > -64) { setTimeout(menuDraw, 1 / 60); }
+            if (s > -256) { setTimeout(menuDraw, 1 / 60); }
             else { size = 0; start = 1; }
         }
         function onKeyDownToStart()
@@ -122,7 +123,7 @@
         var frame = 60;
         var deltaTime = 1 / frame;
 
-        var System = { Game: 0, Pause: 0, Life: 2, Bomb: 1, TapSize: 10, CurrentTap: 0 };
+        var System = { Game: 0, Pause: 0, Life: 0, Bomb: 1, Score: 0, TapSize: 10, CurrentTap: 0 };
 
         var Taps = new Array();
         createWindow(Taps);
@@ -155,7 +156,7 @@
             Objects.push(walls);
         }
 
-        var Player = { type: "player", x: 400, y: 300, angle: 0, speed: 40, size: 8, dx: 0, dy: 0, attackCool: 0 };
+        var Player = { type: "player", x: 400, y: 300, angle: 0, speed: 40, size: 8, dx: 0, dy: 0, attackCool: 0, attackPower: 1, active: 1 };
         var Cursor = { type: "player", x: 0, y: 0, angle: 0, size: 10 };
         var Enemies = new Array();
         var Pbullet = new Array();
@@ -166,24 +167,31 @@
         for (var i = 0; i < eBulletNum; i++)
         {
             var tempAngle = Math.floor(Math.random() * 360);
-            tempBall = { type: "eBullet", bulletType: "repl", x: 100, y: 100, angle: tempAngle, speed: 20, size: 5, dx: 0, dy: 0, bs: 0}
+            tempBall = { type: "eBullet", bulletType: "repl", x: 400, y: 200, angle: tempAngle, speed: 30, size: 5, dx: 400, dy: 200, bs: 5 }
             Ebullet.push(tempBall);
         }
         Ebullet[0].bulletType = "sin";
 
-        setInterval(update, deltaTime);
+        setTimeout(update, deltaTime);
         function update()
         {
             //Pattack
-            if (Player.attackCool == 0 && (attcking1 == 1 || attcking2 == 1)) {
+            if (Player.active == 1 && Player.attackCool == 0 && (attcking1 == 1 || attcking2 == 1)) {
                 Player.attackCool = 1;
                 //createBullet(Player.x, Player.y, "eBullet", "sin", 80, Player.angle * 180 / Math.PI, 2, 3);
-                createBullet(Player.x, Player.y, "eBullet", "repl", 80, Player.angle * 180 / Math.PI, 2, 1);
+                createBullet(Player.x, Player.y, "pBullet", "repl", 80, Player.angle * 180 / Math.PI, 2, 1);
                 setTimeout(function () { Player.attackCool = 0 }, deltaTime * 60 * 66);
             }
 
             collision();
             draw();
+
+            if (System.Life >= 0) {
+                setTimeout(update, deltaTime);
+            }
+            else {
+                gameOver(Player.x, Player.y, System.Score);
+            }
         }
 
         function draw()
@@ -220,9 +228,17 @@
 
             //Bullets
             var ball;
+            Context.fillStyle = "#FF0000";
+            for (var i = 0; i < Pbullet.length; i++)
+            {
+                ball = Pbullet[i];
+                goReflectbullet(ball);
+                drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
+            }
             for (var i = 0; i < Ebullet.length; i++)
             {
                 ball = Ebullet[i];
+                Context.fillStyle = "#FFFFFF";
                 if (ball.bulletType == "sin")
                 {
                     goSinbullet(ball);
@@ -234,7 +250,9 @@
                 }
                 else if (ball.bulletType == "big") {
                     goBigbullet(ball);
-                    drawCircle(ball.x, ball.y, ball.size*10, 0, Math.PI * 2, true);
+                    drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);    //평균의 6~8배 크기
+                    Context.fillStyle = "#000000";
+                    drawCircle(ball.x, ball.y, ball.size * 0.8, 0, Math.PI * 2, true);
                 }
                 else if (ball.bulletType == "lazer") {
                     goLazerbullet(ball);
@@ -274,6 +292,10 @@
             }
 
             //Player
+            if (Player.active == 0)
+            {
+                Context.globalAlpha = 0.5;
+            }
             if (Player.dx != 0 || Player.dy != 0) {
                 if (Player.dx > 1) Player.dx = 1;
                 if (Player.dy < -1) Player.dx = -1;
@@ -286,9 +308,26 @@
                 Player.x += dx * Player.speed * deltaTime;
                 Player.y += dy * Player.speed * deltaTime;
             }
+            //Context.fillStyle = "#50bcdf";
+            Context.fillStyle = "#000000";
             drawCircle(Player.x, Player.y, Player.size, 0, Math.PI * 2, true);
+            Context.fillStyle = "#000000";
+            Context.strokeStyle = "#FF0000";
+            drawCircle(Player.x, Player.y, Player.size, 0, Math.PI * 2, false);
 
             //Cursor & Triangle
+            Context.fillStyle = "#FF0000";
+            Player.angle = -Math.atan2((Cursor.y - Player.y), (Cursor.x - Player.x));
+            var distPT = Player.size + Cursor.size;
+            Context.beginPath();
+            Context.moveTo(Player.x + distPT * Math.cos(Player.angle), Player.y - distPT * Math.sin(Player.angle));
+            Context.lineTo(Player.x + (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.cos(Player.angle) + (-Cursor.size / 2) * Math.sin(Player.angle), Player.y - (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.sin(Player.angle) + (-Cursor.size / 2) * Math.cos(Player.angle));
+            Context.lineTo(Player.x + (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.cos(Player.angle) + (Cursor.size / 2) * Math.sin(Player.angle), Player.y - (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.sin(Player.angle) + (Cursor.size / 2) * Math.cos(Player.angle));
+            Context.closePath();
+            Context.fill();
+
+            Context.globalAlpha = 1;
+            Context.fillStyle = "#FFFFFF";
             Context.strokeStyle = '#FFFFFF';
             var cLeng = 5;
             Context.beginPath();
@@ -299,16 +338,6 @@
             Context.lineTo(Cursor.x, Cursor.y - cLeng);
             Context.stroke();
             Context.closePath();
-
-            Context.fillStyle = "#FF0000";
-            Player.angle = -Math.atan2((Cursor.y - Player.y), (Cursor.x - Player.x));
-            var distPT = Player.size + Cursor.size;
-            Context.beginPath();
-            Context.moveTo(Player.x + distPT * Math.cos(Player.angle), Player.y - distPT * Math.sin(Player.angle));
-            Context.lineTo(Player.x + (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.cos(Player.angle) + (-Cursor.size / 2) * Math.sin(Player.angle), Player.y - (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.sin(Player.angle) + (-Cursor.size / 2) * Math.cos(Player.angle));
-            Context.lineTo(Player.x + (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.cos(Player.angle) + (Cursor.size / 2) * Math.sin(Player.angle), Player.y - (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.sin(Player.angle) + (Cursor.size / 2) * Math.cos(Player.angle));
-            Context.closePath();
-            Context.fill();
 
             //map
             Context.globalAlpha = 0.5;
@@ -359,6 +388,7 @@
         }
         function moveToOtherTap(i)
         {
+            //miniMap set
             System.CurrentTap = Taps[System.CurrentTap].Links[i];
             for (var j = 0; j < Taps.length; j++) {
                 Taps[j].x = Taps[j].y = 0;
@@ -367,13 +397,21 @@
             for (var j = 0; j < Taps.length; j++) {
                 Taps[j].check = 0;
             }
+            //link set
             for (var j = 0; j < 4; j++) {
                 Link[j].active = false;
             }
+            //erase bullets
             while (Ebullet.length > 0) {
                 var ball = Ebullet[0];
                 Ebullet.pop(ball);
             }
+            while (Pbullet.length > 0) {
+                var ball = Pbullet[0];
+                Pbullet.pop(ball);
+            }
+
+            //move Player
             if (i == 0 || i == 2) {
                 if (Player.y >= 300) { Player.y = 300 - (Player.y - 300) + 10; }
                 else if (Player.y < 300) { Player.y = 300 - (Player.y - 300) - 10; }
@@ -424,8 +462,14 @@
             wallCheck.left = l;
             wallCheck.right = r;
 
-
             //Player and EBullet
+            for (var i = 0; i < Ebullet.length; i++)
+            {
+                if (collisionCirCir(Player, Ebullet[i]))
+                {
+                    playerDie();
+                }
+            }
 
             //Player and Link
             if (Taps[System.CurrentTap].Enemy.length == 0) Taps[System.CurrentTap].clear = 1;
@@ -439,16 +483,52 @@
             }
             else
             {
-                //Player and Enemy
+                for (var j = 0; j < Taps[System.CurrentTap].Enemy.length; j++) {
+                    //Player and Enemy
+                    if (collisionCirRec(Player, Taps[System.CurrentTap].Enemy[j]))
+                    {
+                        playerDie();
+                    }
+                    //Enemy and PBullet
+                    for (var i = 0; i < Pbullet.length; i++) {
+                        if (collisionCirRec(Pbullet[i], Taps[System.CurrentTap].Enemy[j])) {
+                            //Taps[System.CurrentTap].Enemy[j]
+                            //hp감소
+                            //사망 확인
+                            //사망 시 제거
+                            //아이템 떨구기
+                            //적 수 확인
+                            //클리어 판정
+                            //스코어
+                        }
+                    }
+                    //Enemy and Wall
+                    for (var i = 0; i < Objects.length; i++) {
+                        if (collisionCirRec(Taps[System.CurrentTap].Enemy[j], Objects[i]) != 'OUT') {
+                            //Taps[System.CurrentTap].Enemy[j]
+                        }
+                    }
+                }
 
-                //Enemy and Wall
-
-                //Enemy and PBullet
             }
 
-            //PBullet and Wall
+            for (var j = 0; j < Objects.length; j++) {
+                //PBullet and Wall
+                for (var i = 0; i < Pbullet.length; i++) {
+                    var col = collisionCirRec(Pbullet[i], Objects[j]);
+                    if (col != "OUT") {
+                        bulletWallCollision(Pbullet[i], Objects[j], col);
+                    }
+                }
 
-            //EBullet and Wall
+                //EBullet and Wall
+                for (var i = 0; i < Ebullet.length; i++) {
+                    var col = collisionCirRec(Ebullet[i], Objects[j]);
+                    if (col != "OUT") {
+                        bulletWallCollision(Ebullet[i], Objects[j], col);
+                    }
+                }
+            }
         }
         function collisionCirCir(cir1, cir2) {
             var dx;
@@ -480,14 +560,50 @@
 
             return check;
         }
-
+        function bulletWallCollision(ball, wall, dir)
+        {
+            if (ball.bulletType == "repl") {
+                if (dir == "RR" || dir == "LL") {
+                    ball.angle = 180 - ball.angle;
+                    ball.bs--;
+                }
+                if (dir == "UU" || dir == "DD") {
+                    ball.angle = 360 - ball.angle;
+                    ball.bs--;
+                }
+                if (ball.bs < 1) {
+                    deleteBullet(ball);
+                }
+            }
+            else if (ball.bulletType == "big") {
+                if (collisionCirRec(ball, wall) == "IN") {
+                    var smalls = 20;
+                    for (var i = 0; i < smalls; i++) {
+                        createBullet(ball.x, ball.y, "eBullet", "repl", ball.speed * 1.5, -ball.angle + 360 / smalls * i, 2, 1);
+                    }
+                    deleteBullet(ball);
+                }
+            }
+            else {
+                deleteBullet(ball);
+            }
+        }
+        function deleteBullet(ball)
+        {
+            if (ball.type == "eBullet") {
+                Ebullet.splice(Ebullet.findIndex(function (item) { return item === ball }), 1);
+            }
+            else if (ball.type == "pBullet") {
+                Pbullet.splice(Pbullet.findIndex(function (item) { return item === ball }), 1);
+            }
+        }
         function createBullet(Bx, By, Btype, BbulletType, Bspeed, Bangle, Bsize, Bspacial)
         {
             var tempBall = { type: Btype, bulletType: BbulletType, x: Bx, y: By, angle: Bangle, speed: Bspeed, size: Bsize, dx: 0, dy: 0, bs: Bspacial }
             if (tempBall.bulletType == "sin")
             {
-                tempBall.dx = tempBall.x;
-                tempBall.dy = tempBall.y;
+                tempBall.dx = Bx;
+                tempBall.dy = By;
             }
             if (tempBall.x > Canvas.width || tempBall.x < 0 || tempBall.y > Canvas.height || tempBall.y < 0) {
                 return;
@@ -508,16 +624,8 @@
 
             ball.x += ball.dx * ball.speed * deltaTime;
             ball.y += ball.dy * ball.speed * deltaTime;
-            if (ball.x > Canvas.width - ball.size || ball.x < ball.size) {
-                ball.angle = 180 - ball.angle;
-                ball.bs--;
-            }
-            if (ball.y > Canvas.height - ball.size || ball.y < ball.size) {
-                ball.angle = 360 - ball.angle;
-                ball.bs--;
-            }
-            if (ball.bs < 1) {
-                Ebullet.splice(Ebullet.findIndex(function (item) { return item === ball }), 1);
+            if (ball.x > Canvas.width + ball.size || ball.x < -ball.size || ball.y > Canvas.height + ball.size || ball.y < -ball.size) {
+                deleteBullet(ball);
             }
         }
         function goBigbullet(ball) {
@@ -527,21 +635,8 @@
 
             ball.x += ball.dx * ball.speed * deltaTime;
             ball.y += ball.dy * ball.speed * deltaTime;
-            if (ball.x > Canvas.width - ball.size || ball.x < ball.size) {
-                ball.angle = 180 - ball.angle;
-                ball.bs--;
-            }
-            if (ball.y > Canvas.height - ball.size || ball.y < ball.size) {
-                ball.angle = 360 - ball.angle;
-                ball.bs--;
-            }
-            if (ball.bs < 1) {
-                var smalls = 20;
-                for (var i = 0; i < smalls; i++)
-                {
-                    createBullet(ball.x, ball.y, "eBullet", "repl", 80, -ball.angle + 360 / smalls * i, 2, 1);
-                }
-                Ebullet.splice(Ebullet.findIndex(function (item) { return item === ball }), 1);
+            if (ball.x > Canvas.width + ball.size || ball.x < -ball.size || ball.y > Canvas.height + ball.size || ball.y < -ball.size) {
+                deleteBullet(ball);
             }
         }
         function goSinbullet(ball)
@@ -551,27 +646,36 @@
             ball.x = ball.dx + ball.bs * Math.cos(theta * Math.PI / 180) - 10 * Math.sin(ball.bs * Math.PI / 180 * 5) * Math.sin(theta * Math.PI / 180);
             ball.y = ball.dy + ball.bs * Math.sin(theta * Math.PI / 180) + 10 * Math.sin(ball.bs * Math.PI / 180 * 5) * Math.cos(theta * Math.PI / 180);
             ball.bs += ball.speed * deltaTime;
-            if (ball.x > Canvas.width - 1) {
-                ball.x = ball.dx;
-                ball.y = ball.dy;
-            }
-            if (ball.y > Canvas.height - 1) {
-                ball.y = ball.dy;
-                ball.x = ball.dx;
-            }
-            if (ball.x < 0) {
-                ball.x = ball.dx;
-                ball.y = ball.dy;
-            }
-            if (ball.y < 0) {
-                ball.x = ball.dx;
-                ball.y = ball.dy;
+            if (ball.x > Canvas.width + ball.size || ball.x < -ball.size || ball.y > Canvas.height + ball.size || ball.y < -ball.size) {
+                deleteBullet(ball);
             }
         }
         function goLazerbullet(ball) {
             ball.x = ball.x + 1;
+            if (ball.x > Canvas.width + ball.size || ball.x < -ball.size || ball.y > Canvas.height + ball.size || ball.y < -ball.size) {
+                deleteBullet(ball);
+            }
         }
 
+        function playerDie()
+        {
+            if (Player.active == 1)
+            {
+                Player.active = 0;
+                System.Life--;
+                if (System.Life < 0) {
+                    alert("gameover");
+                    //game over
+                }
+                else {
+                    setTimeout(respawn, 3000);
+                }
+            }
+        }
+        function respawn()
+        {
+            Player.active = 1;
+        }
         function createWindow(Taps)
         {
             createTap(Taps, 0, 0, -1);
@@ -789,6 +893,90 @@
         }
     }
 
+    function gameOver(px, py, pscore) {
+        var Canvas = document.getElementById('canvas');
+        var Context = Canvas.getContext('2d');
+        document.getElementById('container').style.left = window.innerWidth / 2 - 400 + 'px';
+        Context.globalCompositeOperation = "source-over";
+
+        Context.fillStyle = '#FFFFFF';
+        Context.strokeStyle = '#000000';
+        Context.font = "48px Product Sans";
+
+        //setTimeout(overDraw, 1 / 60);
+        setTimeout(startGameOver, 1 / 60);
+        var size = 0;
+        function startGameOver() {
+            Context.beginPath();
+            Context.arc(px, py, size, 0, Math.PI * 2);
+            Context.fill();
+            Context.closePath();
+            size += 1.5;
+            if (size > 1000) {
+                size = 100;
+                setTimeout(overDraw, 1 / 60);
+            }
+            else {
+                setTimeout(startGameOver, 1 / 60);
+            }
+        }
+
+
+        var theta = 0;
+        var start = 0;
+        var click = 0;
+        function overDraw() {
+            Context.clearRect(0, 0, Canvas.width, Canvas.height);
+            Canvas.style.backgroundColor = "white";
+            Context.font = "48px Product Sans";
+            Context.strokeRect(3, 3, Canvas.width - 6, Canvas.height - 6);
+            Context.fillStyle = '#000000';
+            Context.globalCompositeOperation = "source-over";
+            var s = size;
+            var t = theta;
+            var x = Canvas.width / 2;
+            var y = Canvas.height / 3;
+            Context.setTransform(1, 0, 0, 1, 0, 0);
+            Context.translate(x + Math.cos(Math.PI / 180 * (135 - t)) * s * Math.sqrt(2) / 2, y + Math.sin(Math.PI / 180 * (135 - t)) * s * Math.sqrt(2) / 2);
+            Context.rotate(-t * Math.PI / 180);
+            Context.fillRect(0, 0, s, -s);
+            Context.setTransform(1, 0, 0, 1, 0, 0);
+            t = -t;
+            Context.translate(x + Math.cos(Math.PI / 180 * (135 - t)) * s * Math.sqrt(2) / 2, y + Math.sin(Math.PI / 180 * (135 - t)) * s * Math.sqrt(2) / 2);
+            Context.rotate(-t * Math.PI / 180);
+            Context.fillRect(0, 0, s, -s);
+            Context.setTransform(1, 0, 0, 1, 0, 0);
+            for (var i = 0; i < 500000 + pscore; i++) {
+                s += 8 + i;
+                t *= -0.99;
+                if (s < 0) continue;
+                if (theta / 4 <= i) break;
+                Context.translate(x + Math.cos(Math.PI / 180 * (135 - t)) * s * Math.sqrt(2) / 2, y + Math.sin(Math.PI / 180 * (135 - t)) * s * Math.sqrt(2) / 2);
+                Context.rotate(-t * Math.PI / 180);
+                Context.strokeRect(0, 0, s, -s);
+                //Context.fillRect(0, 0, s, -s);
+                Context.setTransform(1, 0, 0, 1, 0, 0);
+            }
+
+            Context.globalCompositeOperation = "xor";
+            Context.fillStyle = '#000000';
+            Context.fillText("Game", 330, 180);
+            Context.fillText("Over.", 330, 230);
+            Context.font = "24px Product Sans";
+            Context.fillText("Your_Score: [" + pscore + "]", 10, 540);
+            Context.fillText("Press_F5_To_Restart_The_Game", 10, 580);
+            Context.globalCompositeOperation = "source-over";
+            if (s < 1000) {
+                theta += 0.00025 * s;
+            }
+            else {
+                theta += 0.00025 * 1000;
+            }
+
+            if (s > -256) { setTimeout(overDraw, 1 / 60); }
+            else { size = 0; start = 1; }
+        }
+    }
     </script>
 </head>
 <body bgColor="black">
