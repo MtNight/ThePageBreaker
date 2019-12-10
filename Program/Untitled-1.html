@@ -67,7 +67,7 @@
                     mkene = { type: 3, x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 2, heart: 80, w: esize * 12, h: esize * 12 };
                     var ang = Math.PI;
                     var random = Math.floor(Math.random() * 4) + 1;
-                    console
+                    console.log(random);
                     for(var n=0;n<10;n++)
                     {
                         if (random == 1)
@@ -233,6 +233,7 @@
                     if (Enemies[i].type ==3)
                     {
                         var random = Math.floor(Math.random() * 4) + 1;
+                        console.log("hi");
                         console.log(random);
                         for(var n=0;n<10;n++)
                         {
@@ -409,13 +410,13 @@
                 }
             }
             function goLazerbullet(ball) {
-                if(ball.ang==1)
+                if(ball.angle==1)
                     ball.x = ball.x + 1;
-                else if(ball.ang==2)
+                else if(ball.angle==2)
                     ball.x-=1;
-                else if(ball.ang==3)
+                else if(ball.angle==3)
                     ball.y+=1;
-                else if(ball.ang==4)
+                else if(ball.angle==4)
                     ball.y-=1;
             }
             function collisioneCirCir(cir1, cir2) {
