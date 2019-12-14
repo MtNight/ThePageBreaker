@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html>
 
 <head>
@@ -161,70 +161,6 @@
                 }
 
                 //etc
-                for (var i = 0; i < EnemieNUm; i++) {
-                    if (Enemies[i].type == 1) {
-                        if (Enemies[i].cool > 100 && Enemies[i].cool < 400)
-                            emoving1(Enemies[i]);
-                        //console.log(Enemies[i].cool);
-                        Enemies[i].cool++;
-                        if (Enemies[i].cool == 500) {
-                            Enemies[i].cool = 0;
-                            Enemies[i].rand = -1;
-                            Enemies[i].dx = Enemies[i].x;
-                            Enemies[i].dy = Enemies[i].y;
-                        }
-                    }
-                    if (Enemies[i].type == 2) {
-                        if (Enemies[i].cool > 100 && Enemies[i].cool < 400)
-                            emoving2(Enemies[i]);
-                        //console.log(Enemies[i].cool);
-                        Enemies[i].cool++;
-                        if (Enemies[i].cool == 500) {
-                            Enemies[i].cool = 0;
-                            Enemies[i].rand = -1;
-                            Enemies[i].dx = Enemies[i].x;
-                            Enemies[i].dy = Enemies[i].y;
-                        }
-                    }
-                    if(Enemies[i].type==3)
-                    {
-                        if(Enemies[i].cool==1)
-                        {
-                            var random = Math.floor(Math.random() * 4) + 1;
-                            Enemies[i].rand = random;
-                            console.log(random);
-                        }
-                        if(Enemies[i].cool==250||Enemies[i].cool==350)
-                        {
-                            for (var n = 0; n < 20; n++) {
-                                if(Enemies[i].rand == 1)
-                                    createBullet(Enemies[i].x + n * 6 + Enemies[i].w / 2, Enemies[i].y + Enemies[i].h / 2, "eBullet", "lazor", 3, Enemies[i].rand, 6, 2);
-                                else if (Enemies[i].rand == 2)
-                                    createBullet(Enemies[i].x - n * 6 + Enemies[i].w / 2, Enemies[i].y + Enemies[i].h / 2, "eBullet", "lazor", 3, Enemies[i].rand, 6, 2);
-                                else if (Enemies[i].rand == 3)
-                                    createBullet(Enemies[i].x + Enemies[i].w / 2, Enemies[i].y + Enemies[i].h / 2 + n * 6, "eBullet", "lazor", 3, Enemies[i].rand, 6, 2);
-                                else if (Enemies[i].rand == 4)
-                                    createBullet(Enemies[i].x + Enemies[i].w / 2, Enemies[i].y + Enemies[i].h / 2 - n * 6, "eBullet", "lazor", 3, Enemies[i].rand, 6, 2);
-                            }
-                        }
-                        if (Enemies[i].cool > 0 && Enemies[i].cool < 100) {
-                            if (Enemies[i].rand == 1)
-                                drawRect(Enemies[i].x + Enemies[i].w, Enemies[i].y + Enemies[i].h / 2 - 5, 40, 10);
-                            else if (Enemies[i].rand == 2)
-                                drawRect(Enemies[i].x - 40, Enemies[i].y - 5 + Enemies[i].h / 2, 40, 10);
-                            else if (Enemies[i].rand == 3)
-                                drawRect(Enemies[i].x + Enemies[i].w / 2 - 5, Enemies[i].y + Enemies[i].h, 10, 40);
-                            else if (Enemies[i].rand == 4)
-                                drawRect(Enemies[i].x + Enemies[i].w / 2 - 5, Enemies[i].y - 40, 10, 40);
-                        }
-                        if (Enemies[i].cool == 500)
-                            Enemies[i].cool = 0;
-                        Enemies[i].cool++;
-                        //console.log(Enemies[i].cool);
-                    }
-                    if (Enemies[i].type == 5)
-                        emoving3(Enemies[i]);
-                }
 
 
                 //Player

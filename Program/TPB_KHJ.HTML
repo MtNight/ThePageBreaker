@@ -148,16 +148,16 @@
         var Cursor = { type: "player", x: 0, y: 0, angle: 0, size: 10 };
         var Pbullet = new Array();
         var Ebullet = new Array();
+        var bulletEffect = new Array();
 
-        var eBulletNum = 10;
-        var tempBall;
-        for (var i = 0; i < eBulletNum; i++) {
-            var tempAngle = Math.floor(Math.random() * 360);
-            tempBall = { type: "eBullet", bulletType: "repl", x: 400, y: 200, angle: tempAngle, speed: 30, size: 5, dx: 400, dy: 200, bs: 5 }
-            Ebullet.push(tempBall);
-        }
-        Ebullet[0].bulletType = "sin";
-
+        setInterval(function () {
+            var ball;
+            for (var i = 0; i < Ebullet.length; i++) {
+                ball = Ebullet[i];
+                var effect = { x: ball.x, y: ball.y, size: ball.size, alpha: 0.8 };
+                bulletEffect.push(effect);
+            }
+        }, 250);
         setTimeout(update, deltaTime);
         function update() {
             //Pattack
@@ -167,14 +167,15 @@
                 setTimeout(function () { Player.attackCool = 0 }, deltaTime * 60 * 66);
             }
             //Eattack
-            for (var i = 0; i < Taps[System.CurrentTap].Enemy.length; i++) {
-                if (Taps[System.CurrentTap].Enemy[i].enemyType == "square1")
-                    emoving1(Taps[System.CurrentTap].Enemy[i]);
-                if (Taps[System.CurrentTap].Enemy[i].enemyType == "square2")
-                    emoving1(Taps[System.CurrentTap].Enemy[i]);
-                if (Taps[System.CurrentTap].Enemy[i].enemyType == "square5")
-                    emoving3(Taps[System.CurrentTap].Enemy[i]);
-            }
+            //for (var i = 0; i < Taps[System.CurrentTap].Enemy.length; i++) {
+            //    if (Taps[System.CurrentTap].Enemy[i].enemyType == "square1")
+            //        emoving1(Taps[System.CurrentTap].Enemy[i]);
+            //    if (Taps[System.CurrentTap].Enemy[i].enemyType == "square2")
+            //        emoving1(Taps[System.CurrentTap].Enemy[i]);
+            //    if (Taps[System.CurrentTap].Enemy[i].enemyType == "square5")
+            //        emoving3(Taps[System.CurrentTap].Enemy[i]);
+            //}
+            EnemyAttack();
 
             collision();
             draw();
@@ -267,8 +268,22 @@
                 }
             }
 
-            //Bullets
+            //bulletEffect
+            Context.fillStyle = "#FFFFFF";
             var ball;
+            for (var i = 0; i < bulletEffect.length; i++) {
+                ball = bulletEffect[i];
+                if (ball.size <= 0) {
+                    bulletEffect.splice(i, 1);
+                }
+                else {
+                    drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
+                }
+                ball.size -= 0.05;
+            }
+            Context.globalAlpha = 1;
+
+            //Bullets
             Context.fillStyle = "#FF0000";
             for (var i = 0; i < Pbullet.length; i++) {
                 ball = Pbullet[i];
@@ -277,7 +292,7 @@
             }
             for (var i = 0; i < Ebullet.length; i++) {
                 ball = Ebullet[i];
-                Context.fillStyle = "#00EEFF";
+                Context.fillStyle = "#FFFFFF";
                 if (ball.bulletType == "sin") {
                     goSinbullet(ball);
                     drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
@@ -296,7 +311,10 @@
                     goLazerbullet(ball);
                     drawRect(ball.x, ball.y, ball.size*2, ball.size, true);
                 }
+                //var effect = { x: ball.x, y: ball.y, size: ball.size, alpha: 0.8 };
+                //bulletEffect.push(effect);
             }
+
 
             //Player
             if (Player.active == 0) { Context.globalAlpha = 0.5; }
@@ -340,14 +358,15 @@
             Context.stroke(); Context.closePath();
 
             //Enemy
+            var enemy;
             for (var i = 0; i < Taps[System.CurrentTap].Enemy.length; i++) {
-                var enemy = Taps[System.CurrentTap].Enemy[i];
+                enemy = Taps[System.CurrentTap].Enemy[i];
                 Context.fillStyle = "#000000";
-                Context.strokeStyle = "rgb(" + (enemy.mhp - enemy.heart) / enemy.mhp * 255 + "," + enemy.heart / enemy.mhp * 255 + "," + enemy.heart / enemy.mhp * 255 + ")";
+                Context.strokeStyle = "rgb(" + (((enemy.mhp - enemy.heart) / enemy.mhp) * 255) + "," + ((enemy.heart / enemy.mhp) * 255) + "," + ((enemy.heart / enemy.mhp) * 255) + ")";
                 Context.globalAlpha = 2;
                 switch (enemy.enemyType) {
-                    case "square1": drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); drawRect(enemy.x, enemy.y, enemy.w, enemy.h, false); break;
-                    case "square2": drawRhombus(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
+                    case "square1": { drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); drawRect(enemy.x, enemy.y, enemy.w, enemy.h, false); } break;
+                    case "square2": { drawRhombus(enemy.x, enemy.y, enemy.w, enemy.h, true); drawRhombus(enemy.x, enemy.y, enemy.w, enemy.h, false); } break;
                     case "square3": drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
                     case "square4": drawRhombus(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
                     case "square5": { drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); drawTri(enemy.x - enemy.w/2, enemy.y-enemy.h/2, enemy.w, enemy.h, true); } break;
@@ -401,16 +420,20 @@
                         drawRect(enemy.x, enemy.y, enemy.w - gap, enemy.h - gap, false);
                         //Context.strokeStyle = "#00EEFF";
                         //drawRect(enemy.x, enemy.y, enemy.w, enemy.h, false);
-                    } break;
+                        break;
+                    }
                     case "squarePart": {
                         var gap = 2;
                         Context.fillStyle = "#000000";
                         Context.strokeStyle = "#FFFFFF";
                         drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true);
                         drawRect(enemy.x, enemy.y, enemy.w - gap, enemy.h - gap, false);
-                    } break;
+                        break;
+                    }
                     case "squareBu": drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
                 }
+
+                Context.strokeStyle = "#000000";
             }
 
             //map
@@ -549,16 +572,35 @@
             else {
                 for (var j = 0; j < Taps[System.CurrentTap].Enemy.length; j++) {
                     //Enemy and Wall
-                    for (var i = 0; i < Objects.length; i++) {
-                        if (collisionCirRec(Taps[System.CurrentTap].Enemy[j], Objects[i]) != 'OUT') {
-                            //Taps[System.CurrentTap].Enemy[j]
+                    var enemy = Taps[System.CurrentTap].Enemy[j];
+                    if (enemy.enemyType == "square1" || enemy.enemyType == "square2") {
+                        for (var i = 0; i < Objects.length; i++) {
+                            var col = collisionCirRec(enemy, Objects[i]);
+                            if (col != 'OUT') {
+                                if (col == "RR") {
+                                    enemy.x++;
+                                    enemy.rand = 2;
+                                }
+                                else if (col == "LL") {
+                                    enemy.x--;
+                                    enemy.rand = 3;
+                                }
+                                else if (col == "DD") {
+                                    enemy.y++;
+                                    enemy.rand = 1;
+                                }
+                                else if (col == "UU") {
+                                    enemy.y--;
+                                    enemy.rand = 4;
+                                }
+                            }
                         }
                     }
 
                     //Player and Enemy
-                    var enemy = Taps[System.CurrentTap].Enemy[j];
                     if (enemy.enemyType == "square2" || enemy.enemyType == "square4") {
-                        if (collisionCirCir(Player, enemy) == true) {
+                        var temp = { x: enemy.x + enemy.size / 2, y: enemy.y + enemy.size / 2, size: enemy.size };
+                        if (collisionCirCir(Player, temp) == true) {
                             playerDie();
                         }
                     }
@@ -570,7 +612,8 @@
                     //Enemy and PBullet
                     for (var i = 0; i < Pbullet.length; i++) {
                         if (enemy.enemyType == "square2" || enemy.enemyType == "square4") {
-                            if (collisionCirCir(Pbullet[i], enemy) == true) {
+                            var temp = { x: enemy.x + enemy.size / 2, y: enemy.y + enemy.size / 2, size: enemy.size };
+                            if (collisionCirCir(Pbullet[i], temp) == true) {
                                 enemy.heart--;
                                 Pbullet.splice(i, 1);
                             }
@@ -721,11 +764,11 @@
         }
 
         function playerDie() {
-            if (Player.active == 1) {
-                Player.active = 0;
-                System.Life--;
-                if (System.Life >= 0) { setTimeout(respawn, 3000); }
-            }
+            //if (Player.active == 1) {
+            //    Player.active = 0;
+            //    System.Life--;
+            //    if (System.Life >= 0) { setTimeout(respawn, 3000); }
+            //}
         }
         function respawn() { Player.active = 1; }
         function createWindow(Taps) {
@@ -785,8 +828,11 @@
                         createTap(Taps, Taps.length, ((randDir + j) % 4 + 2) % 4, i);
                     }
                 }
-                for (var i = 1; i < 2; i++) {
-                    tap.Enemy.push(makeEne(i, 100 * i, 100));
+                for (var j = 1; j < 5; j++) {
+                    tap.Enemy.push(makeEne(1, 100 * j, 100 * j));
+                }
+                for (var j = 1; j < 5; j++) {
+                    tap.Enemy.push(makeEne(2, 800 - 100 * j, 100 * j));
                 }
             }
             else {
@@ -844,166 +890,306 @@
             var mkene;
             var esize = 15;
             if (ty == 1)
-                mkene = { type: "enemy", enemyType: "square1", x: x1, y: y1, mSpeed: 20, aSpeed: 5, bullet: 1, heart: 20, mhp: 20, w: esize, h: esize, size: esize, angle: 0 };
+                mkene = { type: "enemy", enemyType: "square1", x: x1, y: y1, mSpeed: 20, aSpeed: 5, bullet: 1, heart: 20, mhp: 20, w: esize, h: esize, size: esize, angle: 0, cool: 0, rand: -1, dx: x1, dy: y1 };
             else if (ty == 2)
-                mkene = { type: "enemy", enemyType: "square2", x: x1, y: y1, mSpeed: 24, aSpeed: 5, bullet: 1, heart: 16, mhp: 16, w: esize, h: esize, size: esize, angle: 0 };
+                mkene = { type: "enemy", enemyType: "square2", x: x1, y: y1, mSpeed: 24, aSpeed: 5, bullet: 1, heart: 16, mhp: 16, w: esize, h: esize, size: esize, angle: 0, cool: 0, rand: -1, dx: x1, dy: y1 };
             else if (ty == 3)
-                mkene = { type: "enemy", enemyType: "square3", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 2, heart: 80, mhp: 80, w: esize * 12, h: esize * 12, size: esize * 12, angle: 0 };
+                mkene = { type: "enemy", enemyType: "square3", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 2, heart: 80, mhp: 80, w: esize * 12, h: esize * 12, size: esize * 12, angle: 0, cool: 0, rand: -1, dx: x1, dy: y1 };
             else if (ty == 4)
-                mkene = { type: "enemy", enemyType: "square4", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, mhp: 40, w: esize * 4, h: esize * 4, size: esize * 4, angle: 0 };
+                mkene = { type: "enemy", enemyType: "square4", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, mhp: 40, w: esize * 4, h: esize * 4, size: esize * 4, angle: 0, cool: 0, rand: -1, dx: x1, dy: y1 };
             else if (ty == 5)
-                mkene = { type: "enemy", enemyType: "square5", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, mhp: 40, w: esize * 4, h: esize * 4, size: esize * 4, ran: -1, angle: 0 };
+                mkene = { type: "enemy", enemyType: "square5", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, mhp: 40, w: esize * 4, h: esize * 4, size: esize * 4, angle: 0, cool: 0, rand: -1, dx: x1, dy: y1 };
             else if (ty == 6)
-                mkene = { type: "enemy", enemyType: "squareBoss", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, mhp: 40, w: esize * 9, h: esize * 9, size: esize * 9, ran: -1, angle: 0, parts: new Array(), leg: esize * 3 };
+                mkene = { type: "enemy", enemyType: "squareBoss", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, mhp: 40, w: esize * 9, h: esize * 9, size: esize * 9, parts: new Array(), leg: esize * 3, cool: 0, rand: -1, dx: x1, dy: y1 };
             else if (ty == 7)
-                mkene = { type: "enemy", enemyType: "squarePart", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, mhp: 40, w: esize * 3, h: esize * 3, size: esize * 3, ran: -1, angle: 0, parent: null };
+                mkene = { type: "enemy", enemyType: "squarePart", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, mhp: 40, w: esize * 3, h: esize * 3, size: esize * 3, angle: 0, parent: null, cool: 0, rand: -1, dx: x1, dy: y1 };
             else if (ty == 8)
-                mkene = { type: "enemy", enemyType: "squareBu", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, mhp: 40, w: esize * 3, h: esize * 3, size: esize * 3, ran: -1, angle: 0 };
+                mkene = { type: "enemy", enemyType: "squareBu", x: x1, y: y1, mSpeed: 10, aSpeed: 2, bullet: 1, heart: 40, mhp: 40, w: esize * 3, h: esize * 3, size: esize * 3, angle: 0, cool: 0, rand: -1, dx: x1, dy: y1 };
 
             return mkene;
         }
-        function addBullet() {
+        function addBullet(enemy) {
+            if (enemy.enemyType == "square1") {
+                var ang = 45;
+                for (var n = 0; n < 4; n++) {
+                    createBullet(enemy.x, enemy.y, "eBullet", "repl", 40, ang, 3, 1);
+                    ang += 90;
+                }
+            }
+            if (enemy.enemyType == "square2") {
+                var ang = 0;
+                for (var n = 0; n < 4; n++) {
+                    createBullet(enemy.x, enemy.y, "eBullet", "sin", 20, ang, 3, 2);
+                    ang += 90;
+                }
+            }
+            if (enemy.enemyType == "square3") {
+                var random = Math.floor(Math.random() * 4) + 1;
+                for (var n = 0; n < 10; n++) {
+                    ////console.log(enemy.x + enemy.w / 2+n*3);
+                    //if (random == 1)
+                    //    createBullet(enemy.x + n * 3 + enemy.w / 2, enemy.y + enemy.h / 2, "eBullet", "lazor", 3, random, 3, 2);
+                    //else if (random == 2)
+                    //    createBullet(enemy.x - n * 3 + enemy.w / 2, enemy.y + enemy.h / 2, "eBullet", "lazor", 3, random, 3, 2);
+                    //else if (random == 3)
+                    //    createBullet(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2 + n * 3, "eBullet", "lazor", 3, random, 3, 2);
+                    //else if (random == 4)
+                    //    createBullet(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2 - n * 3, "eBullet", "lazor", 3, random, 3, 2);
+                }
+            }
+        }
+        function EnemyAttack() {
             for (var i = 0; i < Taps[System.CurrentTap].Enemy.length; i++) {
                 var enemy = Taps[System.CurrentTap].Enemy[i];
+                //enemy.cool += Math.random() * 1 / 500;
                 if (enemy.enemyType == "square1") {
-                    var ang = 45;
-                    for (var n = 0; n < 4; n++) {
-                        createBullet(enemy.x, enemy.y, "eBullet", "repl", 100, ang, 3, 1);
-                        ang += 90;
+                    if (enemy.cool > 100 && enemy.cool < 400)
+                        emoving1(enemy);
+                    //console.log(enemy.cool);
+                    enemy.cool++;
+                    if (enemy.cool >= 500) {
+                        enemy.cool = 0;
+                        enemy.rand = -1;
+                        enemy.dx = enemy.x;
+                        enemy.dy = enemy.y;
+                        addBullet(enemy);
                     }
                 }
-                if (enemy.enemyType == "square2") {
-                    var ang = 0;
-                    for (var n = 0; n < 4; n++) {
-                        createBullet(enemy.x, enemy.y, "eBullet", "sin", 30, ang, 3, 2);
-                        ang += 90;
+                else if (enemy.enemyType == "square2") {
+                    if (enemy.cool > 100 && enemy.cool < 400)
+                        emoving2(enemy);
+                    //console.log(enemy.cool);
+                    enemy.cool++;
+                    if (enemy.cool >= 500) {
+                        enemy.cool = 0;
+                        enemy.rand = -1;
+                        enemy.dx = enemy.x;
+                        enemy.dy = enemy.y;
+                        addBullet(enemy);
                     }
                 }
-                if (enemy.enemyType == "square3") {
-                    var random = Math.floor(Math.random() * 4) + 1;
-                    for (var n = 0; n < 10; n++) {
-                        ////console.log(enemy.x + enemy.w / 2+n*3);
-                        //if (random == 1)
-                        //    createBullet(enemy.x + n * 3 + enemy.w / 2, enemy.y + enemy.h / 2, "eBullet", "lazor", 3, random, 3, 2);
-                        //else if (random == 2)
-                        //    createBullet(enemy.x - n * 3 + enemy.w / 2, enemy.y + enemy.h / 2, "eBullet", "lazor", 3, random, 3, 2);
-                        //else if (random == 3)
-                        //    createBullet(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2 + n * 3, "eBullet", "lazor", 3, random, 3, 2);
-                        //else if (random == 4)
-                        //    createBullet(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2 - n * 3, "eBullet", "lazor", 3, random, 3, 2);
+                else if (enemy.enemyType == "square3") {
+                    if (enemy.cool == 1) {
+                        var random = Math.floor(Math.random() * 4) + 1;
+                        enemy.rand = random;
+                        console.log(random);
                     }
+                    if (enemy.cool == 250 || enemy.cool == 350) {
+                        for (var n = 0; n < 20; n++) {
+                            if (enemy.rand == 1)
+                                createBullet(enemy.x + n * 6 + enemy.w / 2, enemy.y + enemy.h / 2, "eBullet", "lazor", 3, enemy.rand, 6, 2);
+                            else if (enemy.rand == 2)
+                                createBullet(enemy.x - n * 6 + enemy.w / 2, enemy.y + enemy.h / 2, "eBullet", "lazor", 3, enemy.rand, 6, 2);
+                            else if (enemy.rand == 3)
+                                createBullet(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2 + n * 6, "eBullet", "lazor", 3, enemy.rand, 6, 2);
+                            else if (enemy.rand == 4)
+                                createBullet(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2 - n * 6, "eBullet", "lazor", 3, enemy.rand, 6, 2);
+                        }
+                    }
+                    if (enemy.cool > 0 && enemy.cool < 100) {
+                        if (enemy.rand == 1)
+                            drawRect(enemy.x + enemy.w, enemy.y + enemy.h / 2 - 5, 40, 10);
+                        else if (enemy.rand == 2)
+                            drawRect(enemy.x - 40, enemy.y - 5 + enemy.h / 2, 40, 10);
+                        else if (enemy.rand == 3)
+                            drawRect(enemy.x + enemy.w / 2 - 5, enemy.y + enemy.h, 10, 40);
+                        else if (enemy.rand == 4)
+                            drawRect(enemy.x + enemy.w / 2 - 5, enemy.y - 40, 10, 40);
+                    }
+                    if (enemy.cool >= 500) {
+                        enemy.cool = 0;
+                        addBullet(enemy);
+                    }
+                    enemy.cool++;
+                    //console.log(enemy.cool);
                 }
+                else if (enemy.enemyType == "square5")
+                    emoving3(enemy);
             }
         }
         function emoving1(Enemy) {
             var x1 = Enemy.x - Player.x;
             var y1 = Enemy.y - Player.y;
             var i = Math.sqrt(x1 * x1 + y1 * y1);
-            if (i > 100) {
-                if (x1 <= 0 && y1 <= 0) {
-                    Enemy.x += 0.1;
-                    Enemy.y += 0.1;
+            var random = Math.floor(Math.random() * 4) + 1;
+            if (i >= 100 && Enemy.rand == -1) {
+                var siny = -y1 / i * 0.5;
+                var cosy = -x1 / i * 0.5;
+                Enemy.x += cosy;
+                Enemy.y += siny;
+            }
+            else {
+                if (Enemy.rand == -1)
+                    Enemy.rand = random;
+                if (Enemy.rand == 1) {
+                    Enemy.y += 0.5;
                 }
-                else if (x1 <= 0 && y1 > 0) {
-                    Enemy.x += 0.1;
-                    Enemy.y -= 0.1;
+                else if (Enemy.rand == 2) {
+                    Enemy.x += 0.5;
                 }
-                else if (x1 > 0 && y1 <= 0) {
-                    Enemy.x -= 0.1;
-                    Enemy.y += 0.1;
+                else if (Enemy.rand == 3) {
+                    Enemy.x -= 0.5;
                 }
-                else {
-                    Enemy.x -= 0.1;
-                    Enemy.y -= 0.1;
+                else if (Enemy.rand == 4) {
+                    Enemy.y -= 0.5;
                 }
             }
-
-            if (Enemy.x <= 0)
+            if (Enemy.x <= 0) {
                 Enemy.x = 0;
-            if (Enemy.x + Enemy.w >= Canvas.width)
+                Enemy.rand = 2;
+            }
+            if (Enemy.x + Enemy.w >= Canvas.width) {
+                Enemy.rand = 3;
                 Enemy.x = Canvas.width - Enemy.w - 1;
-            if (Enemy.y <= 0)
+            }
+            if (Enemy.y <= 0) {
                 Enemy.y = 0;
-            if (Enemy.y + Enemy.h >= Canvas.height)
+                Enemy.rand = 1;
+            }
+            if (Enemy.y + Enemy.h >= Canvas.height) {
+                Enemy.rand = 4;
                 Enemy.y = Canvas.height - Enemy.h - 1;
+            }
         }
         function emoving2(Enemy) {
             var x1 = Enemy.x - Player.x;
             var y1 = Enemy.y - Player.y;
             var i = Math.sqrt(x1 * x1 + y1 * y1);
-            if (i > 100) {
-                if (x1 <= 0 && y1 <= 0) {
-                    Enemy.x -= 0.1;
-                    Enemy.y -= 0.1;
-                }
-                else if (x1 <= 0 && y1 > 0) {
-                    Enemy.x -= 0.1;
-                    Enemy.y += 0.1;
-                }
-                else if (x1 > 0 && y1 <= 0) {
-                    Enemy.x += 0.1;
-                    Enemy.y -= 0.1;
-                }
-                else {
-                    Enemy.x += 0.1;
-                    Enemy.y += 0.1;
-                }
+            var random = Math.floor(Math.random() * 4) + 1;
+            if (i <= 100 && Enemy.rand == -1) {
+                //console.log("ag");
+                var siny = -y1 / i * 0.5;
+                var cosy = -x1 / i * 0.5;
+                Enemy.x -= cosy;
+                Enemy.y -= siny;
             }
             else {
-
+                if (Enemy.rand == -1)
+                    Enemy.rand = random;
+                if (Enemy.rand == 1) {
+                    Enemy.y += 0.5;
+                }
+                else if (Enemy.rand == 2) {
+                    Enemy.x += 0.5;
+                }
+                else if (Enemy.rand == 3) {
+                    Enemy.x -= 0.5;
+                }
+                else if (Enemy.rand == 4) {
+                    Enemy.y -= 0.5;
+                }
             }
-            if (Enemy.x <= 0)
+            if (Enemy.x <= 0) {
                 Enemy.x = 0;
-            if (Enemy.x + Enemy.w >= Canvas.width)
+                Enemy.rand = 2;
+            }
+            if (Enemy.x + Enemy.w >= Canvas.width) {
+                Enemy.rand = 3;
                 Enemy.x = Canvas.width - Enemy.w - 1;
-            if (Enemy.y <= 0)
+            }
+            if (Enemy.y <= 0) {
                 Enemy.y = 0;
-            if (Enemy.y + Enemy.h >= Canvas.height)
+                Enemy.rand = 1;
+            }
+            if (Enemy.y + Enemy.h >= Canvas.height) {
+                Enemy.rand = 4;
                 Enemy.y = Canvas.height - Enemy.h - 1;
+            }
         }
         function emoving3(Enemy) {
             var random = Math.floor(Math.random() * 2) + 1;
-            if (Enemy.ran == -1) {
+            //console.log(Enemy.cool);
+            if (Enemy.rand == 0) {
+                Enemy.cool++;
+                if (Enemy.cool == 200) {
+                    if (random == 1) {
+                        if (Enemy.x < Player.x) {
+                            Enemy.rand = 5;
+                        }
+                        else {
+                            Enemy.rand = 6;
+                        }
+                    }
+                    else {
+                        if (Enemy.y < Player.y) {
+                            Enemy.rand = 7;
+                        }
+                        else {
+                            Enemy.rand = 8;
+                        }
+                    }
+                }
+                else if (Enemy.cool > 200) {
+                    if (Enemy.x - (Enemy.w / 8 * Math.sqrt(2)) <= 0) {
+                        Enemy.x += 1;
+                    }
+                    if (Enemy.x + (Enemy.w / 8 * Math.sqrt(2)) + Enemy.w >= Canvas.width) {
+                        Enemy.x -= 1;
+                    }
+                    if (Enemy.y - (Enemy.h / 8 * Math.sqrt(2)) <= 0) {
+                        Enemy.y += 1;
+                    }
+                    if (Enemy.y + (Enemy.h / 8 * Math.sqrt(2)) + Enemy.h >= Canvas.height) {
+                        Enemy.y -= 1;
+                    }
+                }
+            }
+            if (Enemy.rand == 5 && Enemy.rand == 6) {
+
+            }
+            if (Enemy.rand == -1) {
                 if (random == 1) {
                     if (Player.x >= Enemy.x + Enemy.w / 2)
-                        Enemy.ran = 1;
+                        Enemy.rand = 2;
                     else
-                        Enemy.ran = 2;
+                        Enemy.rand = 1;
                 }
                 else {
                     if (Player.y >= Enemy.y + Enemy.h / 2)
-                        Enemy.ran = 3;
+                        Enemy.rand = 4;
                     else
-                        Enemy.ran = 4;
+                        Enemy.rand = 3;
                 }
             }
-            if (Enemy.ran == 1) {
-                Enemy.x -= 0.1;
+            if (Enemy.rand == 1) {
+                Enemy.x -= 1;
             }
-            else if (Enemy.ran == 2) {
-                Enemy.x += 0.1;
+            else if (Enemy.rand == 2) {
+                Enemy.x += 1;
             }
-            else if (Enemy.ran == 3) {
-                Enemy.y -= 0.1;
+            else if (Enemy.rand == 3) {
+                Enemy.y -= 1;
             }
-            else if (Enemy.ran == 4) {
-                Enemy.y += 0.1;
+            else if (Enemy.rand == 4) {
+                Enemy.y += 1;
             }
             if (Enemy.x - (Enemy.w / 8 * Math.sqrt(2)) <= 0) {
-                Enemy.ran = -1;
+                Enemy.rand = 0
                 Enemy.x += 0.1;
+                Enemy.cool++;
+                Enemy.dx = Player.x;
+                Enemy.dy = Player.y;
             }
             if (Enemy.x + (Enemy.w / 8 * Math.sqrt(2)) + Enemy.w >= Canvas.width) {
-                Enemy.ran = -1;
+                Enemy.rand = 0;
                 Enemy.x -= 0.1;
+                Enemy.cool++;
+                Enemy.dx = Player.x;
+                Enemy.dy = Player.y;
             }
             if (Enemy.y - (Enemy.h / 8 * Math.sqrt(2)) <= 0) {
-                Enemy.ran = -1;
+                Enemy.rand = 0;
                 Enemy.y += 0.1;
+                Enemy.cool++;
+                Enemy.dx = Player.x;
+                Enemy.dy = Player.y;
             }
             if (Enemy.y + (Enemy.h / 8 * Math.sqrt(2)) + Enemy.h >= Canvas.height) {
-                Enemy.ran = -1;
+                Enemy.rand = 0;
                 Enemy.y -= 0.1;
+                Enemy.cool++;
+                Enemy.dx = Player.x;
+                Enemy.dy = Player.y;
             }
         }
 
@@ -1089,8 +1275,10 @@
             Context.setTransform(1, 0, 0, 1, 0, 0);
             Context.translate(x + (w / 2), y - (h / 5));
             Context.rotate(Math.PI / 4);
-            Context.fillRect(0, 0, w, h);
+            Context.rect(0, 0, w, h);
             Context.setTransform(1, 0, 0, 1, 0, 0);
+            if (f == true) { Context.fill(); }
+            else { Context.stroke(); }
         }
         function drawTri(x, y, w, h, f) {
             var w1 = w / 4;
