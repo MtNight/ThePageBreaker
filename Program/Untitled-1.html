@@ -65,22 +65,10 @@
                 }
                 else if (ty == 3) {
                     var random = Math.floor(Math.random() * 4) + 1;
-                    mkene = { type: 3, x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 2, heart: 80, w: esize * 12, h: esize * 12 ,rand : random ,cool:0};
-                    var ang = Math.PI;
-                    //console.log(random);
-                    /*for (var n = 0; n < 20; n++) {
-                        if (random == 1)
-                            createBullet(mkene.x + n * 6 + mkene.w / 2, mkene.y + mkene.h / 2, "eBullet", "lazor", 3, random, 6, 2);
-                        else if (random == 2)
-                            createBullet(mkene.x - n * 6 + mkene.w / 2, mkene.y + mkene.h / 2, "eBullet", "lazor", 3, random, 6, 2);
-                        else if (random == 3)
-                            createBullet(mkene.x + mkene.w / 2, mkene.y + mkene.h / 2 + n * 6, "eBullet", "lazor", 3, random, 6, 2);
-                        else if (random == 4)
-                            createBullet(mkene.x + mkene.w / 2, mkene.y + mkene.h / 2 - n * 6, "eBullet", "lazor", 3, random, 6, 2);
-                    }*/
+                    mkene = { type: 3, x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 2, heart: 80, w: esize * 12, h: esize * 12 ,rand : random ,cool:0};                    
                 }
                 else if (ty == 4)
-                    mkene = { type: 4, x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, w: esize * 4, h: esize * 4 };
+                    mkene = { type: 4, x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, w: esize * 4, h: esize * 4 ,cool:0};
                 else if (ty == 5)
                     mkene = { type: 5, x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, w: esize * 4, h: esize * 4, rand: -1, cool: 0, dx: 0, dy: 0 };
                 Enemies.push(mkene);
@@ -88,11 +76,10 @@
             /*for (var i = 1; i < 6; i++) {
                 makeEne(2, 100 * i, 100);
             }*/
-            makeEne(5, 200, 200);
+            makeEne(4, 200, 200);
             setInterval(addBullet, 5000);
             //addBullet();
             setInterval(update, deltaTime);
-            //console.log(deltaTime);
             function update() {
                 draw();
                 /*for(var i=0;i<5;i++)
@@ -165,7 +152,6 @@
                     if (Enemies[i].type == 1) {
                         if (Enemies[i].cool > 100 && Enemies[i].cool < 400)
                             emoving1(Enemies[i]);
-                        //console.log(Enemies[i].cool);
                         Enemies[i].cool++;
                         if (Enemies[i].cool == 500) {
                             Enemies[i].cool = 0;
@@ -177,7 +163,6 @@
                     if (Enemies[i].type == 2) {
                         if (Enemies[i].cool > 100 && Enemies[i].cool < 400)
                             emoving2(Enemies[i]);
-                        //console.log(Enemies[i].cool);
                         Enemies[i].cool++;
                         if (Enemies[i].cool == 500) {
                             Enemies[i].cool = 0;
@@ -192,7 +177,6 @@
                         {
                             var random = Math.floor(Math.random() * 4) + 1;
                             Enemies[i].rand = random;
-                            console.log(random);
                         }
                         if(Enemies[i].cool==250||Enemies[i].cool==350)
                         {
@@ -258,7 +242,15 @@
                         if (Enemies[i].cool == 500)
                             Enemies[i].cool = 0;
                         Enemies[i].cool++;
-                        //console.log(Enemies[i].cool);
+                    }
+                    if(Enemies[i].type==4)
+                    {
+                        Enemies[i].cool++;
+                        if(Enemies[i].cool==1000)
+                        {
+                            makeEne(2,Enemies[i].x,Enemies[i].y);
+                            Enemies.cool=0;
+                        }
                     }
                     if (Enemies[i].type == 5)
                         emoving3(Enemies[i]);
@@ -292,7 +284,6 @@
 
                 Context.fillStyle = "#FF0000";
                 Player.angle = -Math.atan2((Cursor.y - Player.y), (Cursor.x - Player.x));
-                //console.log(Player.angle);
                 var distPT = Player.size + Cursor.size;
                 Context.beginPath();
                 Context.moveTo(Player.x + distPT * Math.cos(Player.angle), Player.y - distPT * Math.sin(Player.angle));
@@ -305,7 +296,6 @@
             function addBullet() {
                 for (var i = 0; i < EnemieNUm; i++) {
                     if (Enemies[i].type == 1) {
-                        //console.log("ee");
                         var pi = Math.PI;
                         var ang = pi / 4;
                         for (var n = 0; n < 4; n++) {
@@ -324,7 +314,6 @@
                     if (Enemies[i].type == 3) {
                         var random = Math.floor(Math.random() * 4) + 1;
                         for (var n = 0; n < 20; n++) {
-                            //console.log(Enemies[i].x + Enemies[i].w / 2+n*3);
                             /*if (random == 1)
                                 createBullet(Enemies[i].x + n * 6 + Enemies[i].w / 2, Enemies[i].y + Enemies[i].h / 2, "eBullet", "lazor", 3, random, 6, 2);
                             else if (random == 2)
@@ -387,9 +376,7 @@
                 var y1 = Enemy.y - Player.y;
                 var i = Math.sqrt(x1 * x1 + y1 * y1);
                 var random = Math.floor(Math.random() * 4) + 1;
-                console.log(Enemy.rand);
                 if (i <= 100&&Enemy.rand==-1) {
-                    //console.log("ag");
                     var siny = -y1 / i * 0.5;
                     var cosy = -x1 / i * 0.5;
                     Enemy.x -= cosy;
@@ -431,9 +418,6 @@
             }
             function emoving3(Enemy) {
                 var random = Math.floor(Math.random() * 2) + 1;
-                //console.log(Enemy.cool);
-                //console.log("hh");
-                console.log(Enemy.rand);
                 if (Enemy.rand == 9) {
                     Enemy.cool++;
                     if (Enemy.cool >= 200) {
