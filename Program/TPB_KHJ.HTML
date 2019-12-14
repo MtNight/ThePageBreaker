@@ -7,20 +7,17 @@
             font-family: 'Product Sans';
             src: url('Resource/Product_Sans_Regular.ttf');
         }
-
     </style>
-
     <script type="text/javascript">
         window.addEventListener('load', game, false);
         //window.addEventListener('load', menu, false);
-    function menu()
-    {
+    function menu() {
         document.onkeydown = onKeyDownToStart;
         var Canvas = document.getElementById('canvas');
         var Context = Canvas.getContext('2d');
         document.getElementById('container').style.left = window.innerWidth / 2 - 400 + 'px';
-        Context.globalCompositeOperation = "source-over";
 
+        Context.globalCompositeOperation = "source-over";
         Context.fillStyle = '#FFFFFF';
         Context.strokeStyle = '#FFFFFF';
         Context.font = "48px Product Sans";
@@ -30,10 +27,8 @@
         var size = 160;
         var start = 0;
         var click = 0;
-        function menuDraw()
-        {
+        function menuDraw() {
             Context.clearRect(0, 0, Canvas.width, Canvas.height);
-            Context.font = "48px Product Sans";
             Context.strokeRect(3, 3, Canvas.width - 6, Canvas.height - 6);
             Context.fillStyle = '#FFFFFF';
             Context.globalCompositeOperation = "source-over";
@@ -51,8 +46,7 @@
             Context.rotate(-t * Math.PI / 180);
             Context.fillRect(0, 0, s, -s);
             Context.setTransform(1, 0, 0, 1, 0, 0);
-            for (var i = 0; i < 36; i++)
-            {
+            for (var i = 0; i < 36; i++) {
                 s += 8 + i;
                 t *= -0.99;
                 if (s < 0) continue;
@@ -65,53 +59,42 @@
             }
 
             Context.globalCompositeOperation = "xor";
-            Context.fillStyle = '#FFFFFF';
+            Context.font = "48px Product Sans";
             Context.fillText("The", 310, 150);
             Context.fillText("Page", 310, 200);
             Context.fillText("Breaker.", 310, 250);
             Context.font = "24px Product Sans";
-            if (click == 0) {
-                Context.fillText("Click_Any_Key_to_Start_The_Game", 10, 580);
-            }
-            else {
-                Context.fillText("Now_Starting...", 10, 580);
-            }
-            Context.globalCompositeOperation = "source-over";
+            if (click == 0) { Context.fillText("Click_Any_Key_to_Start_The_Game", 10, 580); }
+            else { Context.fillText("Now_Starting...", 10, 580); }
             theta += 0.00025*s;
 
+            Context.globalCompositeOperation = "source-over";
             if (s > -256) { setTimeout(menuDraw, 1 / 60); }
             else { size = 0; start = 1; }
         }
-        function onKeyDownToStart()
-        {
+        function onKeyDownToStart() {
             if (click == 0) {
                 click = 1;
                 gameStart();
             }
         }
-        function gameStart()
-        {
+        function gameStart() {
             if (start == 0) { size -= 1; setTimeout(gameStart, 1 / 60); }
             else if (start == 1) {
                 size += 1 / 300;
                 Context.fillStyle = '#FFFFFF';
                 Context.fillRect(0, 0, Canvas.width, Canvas.height);
                 Context.fillStyle = '#000000';
-                Context.font = "24px Product Sans";
                 Context.fillText("Now_Starting...", 10, 580);
                 Context.fillRect(Canvas.width / 2 - (Canvas.width * 13 / 30) * size, Canvas.height / 2 - (Canvas.height * 13 / 30) * size, Canvas.width * 13 / 15 * size, Canvas.height * 13 / 15 * size);
                 if (size >= 1) { start = 2;  }
                 setTimeout(gameStart, 1 / 60);
             }
-            else {
-                game();
-            }
+            else { setTimeout(game, 10); }
         }
     }
-    function game()
-    {
+    function game() {
         document.onkeydown = onKeyDownFunc;
-        document.onkeypress = onKeyPressFunc;
         document.onkeyup = onKeyUpFunc;
         document.onmousemove = onMouseMoveFunc;
         document.onmousedown = onMouseDownFunc;
@@ -123,133 +106,179 @@
         var frame = 60;
         var deltaTime = 1 / frame;
 
-        var System = { Game: 0, Pause: 0, Life: 0, Bomb: 1, Score: 0, TapSize: 10, CurrentTap: 0 };
+        var System = { Game: 0, Pause: 0, Life: 0, Bomb: 1, Score: 0, TapSize: 2, CurrentTap: 0 };
 
         var Taps = new Array();
         createWindow(Taps);
-
         var tapCorrection = 1 / 15;
         var Link = new Array();
-        for (var i = 0; i < 4; i++)
-        {
-            var links = { type: "link", x: Canvas.width / 2, y: Canvas.height / 2, size: 8, active: false };
-            switch (i)
-            {
-                case 0: links.y += Canvas.height * tapCorrection * 6.5; break;
-                case 1: links.x += Canvas.width * tapCorrection * 6.5; break;
-                case 2: links.y -= Canvas.height * tapCorrection * 6.5; break;
-                case 3: links.x -= Canvas.width * tapCorrection * 6.5; break;
+        var linkWeight = 6.5;
+        for (var i = 0; i < 4; i++) {
+            var links = { type: "link", x: Canvas.width / 2, y: Canvas.height / 2, size: 30, linkDir: 0, effectx: new Array(), effecty: new Array(), active: false };
+            switch (i) {
+                case 0: links.y += Canvas.height * tapCorrection * linkWeight; break;
+                case 1: links.x += Canvas.width * tapCorrection * linkWeight; break;
+                case 2: links.y -= Canvas.height * tapCorrection * linkWeight; break;
+                case 3: links.x -= Canvas.width * tapCorrection * linkWeight; break;
             }
             Link.push(links);
         }
+        for (var j = 0; j < 4; j++) {
+            for (var i = 0; i < 20; i++) {
+                Link[j].effectx.push(Math.random() * 2.5 - 1.25);
+                Link[j].effecty.push(Math.random() * 1.5 - 0.75);
+            }
+            Link[j].linkDir = Math.random() * 30 - 15;
+        }
 
         var Objects = new Array();
-        for (var i = 0; i < 4; i++)
-        {
+        var wallWeight = 7;
+        for (var i = 0; i < 4; i++) {
             var walls = { type: "wall", x: Canvas.width / 2, y: Canvas.height / 2, w: Canvas.width, h: Canvas.height };
             switch (i) {
-                case 0: walls.y += Canvas.height * tapCorrection * 7; walls.h *= tapCorrection; break;
-                case 1: walls.x += Canvas.width * tapCorrection * 7; walls.w *= tapCorrection; break;
-                case 2: walls.y -= Canvas.height * tapCorrection * 7; walls.h *= tapCorrection; break;
-                case 3: walls.x -= Canvas.width * tapCorrection * 7; walls.w *= tapCorrection; break;
+                case 0: walls.y += Canvas.height * tapCorrection * wallWeight; walls.h *= tapCorrection; break;
+                case 1: walls.x += Canvas.width * tapCorrection * wallWeight; walls.w *= tapCorrection; break;
+                case 2: walls.y -= Canvas.height * tapCorrection * wallWeight; walls.h *= tapCorrection; break;
+                case 3: walls.x -= Canvas.width * tapCorrection * wallWeight; walls.w *= tapCorrection; break;
             }
             Objects.push(walls);
         }
 
         var Player = { type: "player", x: 400, y: 300, angle: 0, speed: 40, size: 8, dx: 0, dy: 0, attackCool: 0, attackPower: 1, active: 1 };
         var Cursor = { type: "player", x: 0, y: 0, angle: 0, size: 10 };
-        var Enemies = new Array();
         var Pbullet = new Array();
         var Ebullet = new Array();
 
         var eBulletNum = 10;
         var tempBall;
-        for (var i = 0; i < eBulletNum; i++)
-        {
+        for (var i = 0; i < eBulletNum; i++) {
             var tempAngle = Math.floor(Math.random() * 360);
             tempBall = { type: "eBullet", bulletType: "repl", x: 400, y: 200, angle: tempAngle, speed: 30, size: 5, dx: 400, dy: 200, bs: 5 }
             Ebullet.push(tempBall);
         }
         Ebullet[0].bulletType = "sin";
 
-        //setInterval(addBullet, 5000);
         setTimeout(update, deltaTime);
-        function update()
-        {
+        function update() {
             //Pattack
             if (Player.active == 1 && Player.attackCool == 0 && (attcking1 == 1 || attcking2 == 1)) {
                 Player.attackCool = 1;
-                //createBullet(Player.x, Player.y, "eBullet", "sin", 80, Player.angle * 180 / Math.PI, 2, 3);
                 createBullet(Player.x, Player.y, "pBullet", "repl", 80, Player.angle * 180 / Math.PI, 2, 1);
                 setTimeout(function () { Player.attackCool = 0 }, deltaTime * 60 * 66);
             }
+            //Eattack
             for (var i = 0; i < Taps[System.CurrentTap].Enemy.length; i++) {
-                if (Taps[System.CurrentTap].Enemy[i].type == "square1")
+                if (Taps[System.CurrentTap].Enemy[i].enemyType == "square1")
                     emoving1(Taps[System.CurrentTap].Enemy[i]);
-                if (Taps[System.CurrentTap].Enemy[i].type == "square2")
+                if (Taps[System.CurrentTap].Enemy[i].enemyType == "square2")
                     emoving1(Taps[System.CurrentTap].Enemy[i]);
-                if (Taps[System.CurrentTap].Enemy[i].type == "square5")
+                if (Taps[System.CurrentTap].Enemy[i].enemyType == "square5")
                     emoving3(Taps[System.CurrentTap].Enemy[i]);
             }
 
             collision();
             draw();
 
-            if (System.Life >= 0) {
-                setTimeout(update, deltaTime);
-            }
-            else {
-                gameOver(Player.x, Player.y, System.Score);
-            }
+            //check GameOver
+            if (System.Life >= 0) { setTimeout(update, deltaTime);  }
+            else { gameOver(Player.x, Player.y, System.Score); }
         }
 
-        function draw()
-        {
+        function draw() {
             //Canvas
             Context.fillStyle = '#000000';
             Context.fillRect(0, 0, Canvas.width, Canvas.height);
             Context.strokeStyle = '#FFFFFF';
             Context.strokeRect(0, 0, Canvas.width, Canvas.height);
-            Context.strokeStyle = '#000000';
 
             //tap
             Context.fillStyle = "#000000";
+            Context.strokeStyle = '#000000';
             Context.fillRect(Canvas.width * tapCorrection, Canvas.height * tapCorrection, Canvas.width * (1 - 2 * tapCorrection), Canvas.height * (1 - 2 * tapCorrection));
             Context.strokeRect(Canvas.width * tapCorrection, Canvas.height * tapCorrection, Canvas.width * (1 - 2 * tapCorrection), Canvas.height * (1 - 2 * tapCorrection));
             Context.fillStyle = "#FFFFFF";
-            Context.globalAlpha = 0.7;
-            Context.font = "48px Product Sans";
-            Context.fillText(System.CurrentTap, Canvas.width / 2 - 14, Canvas.height / 2 + 16);
+            Context.globalAlpha = 0.6;
+            Context.font = "Bold 1000px Product Sans";
+            //Context.fillText(System.CurrentTap, Canvas.width / 2 - 14, Canvas.height / 2 + 16);
+            Context.fillText(System.CurrentTap * 3, Canvas.width / 5, Canvas.height / 2);
+            Context.font = "2000px Product Sans";
+            Context.fillText(System.CurrentTap * 7, -Canvas.width / 4, Canvas.height* 7 / 3);
+            Context.font = "3000px Product Sans";
+            Context.fillText(System.CurrentTap, -Canvas.width / 2, Canvas.height * 3 / 2);
+            Context.font = "Bold 24px Product Sans";
+            if (System.CurrentTap == 0)
+            {
+                Context.fillStyle = "#FFFF00";
+                Context.fillText("Move: WASD", 100, 100);
+                Context.fillText("Attack: Space or MouseLeft", 100, 500);
+                Context.fillText("Slow: Shift", 600, 100);
+                Context.fillText("Bomb: V", 600, 500);
+            }
             Context.globalAlpha = 1;
 
+            //walls
+            Context.strokeStyle = "#FFFFFF";
+            Context.fillStyle = "#FFFFFF";
+            for (var i = 0; i < Objects.length; i++) {
+                var wall = Objects[i];
+                drawRect(wall.x, wall.y, wall.w, wall.h, true);
+            }
+            Context.globalAlpha = 1;
+            Context.strokeStyle = "#000000";
+            var wallEdge = 2;
+            Context.strokeRect(wallEdge, wallEdge, Canvas.width - 2 * wallEdge, Canvas.height - 2 * wallEdge);
+            Context.strokeRect(Canvas.width * tapCorrection - wallEdge, Canvas.height * tapCorrection - wallEdge, Canvas.width * tapCorrection * 13 + 2 * wallEdge, Canvas.height * tapCorrection * 13 + 2 * wallEdge);
+            Context.strokeStyle = "#FFFFFF";
+
             //Link(door)
-            for (var i = 0; i < 4; i++) {
-                if (Taps[System.CurrentTap].Links[i] != -1)
-                {
-                    if (Taps[Taps[System.CurrentTap].Links[i]].TapType == "Start") { Context.strokeStyle = "#50bcdf"; }
-                    else if (Taps[Taps[System.CurrentTap].Links[i]].TapType == "Boss") { Context.strokeStyle = "#FF0000"; }
-                    else { Context.strokeStyle = "#FFFFFF" }
-                    drawCircle(Link[i].x, Link[i].y, Link[i].size, 0, Math.PI * 2, false);
-                    Context.strokeStyle = "#FFFFFF"
-                    Link[i].active = true;
+            if (Taps[System.CurrentTap].clear == 1) {
+                for (var i = 0; i < 4; i++) {
+                    if (Taps[System.CurrentTap].Links[i] != -1) {
+                        if (Taps[Taps[System.CurrentTap].Links[i]].TapType == "Boss") { Context.strokeStyle = "#FF0000"; }
+                        else { Context.strokeStyle = "#00EEFF" }
+                        Context.globalAlpha = 1;
+                        Context.clearRect(Link[i].x - Link[i].size / 3, Link[i].y - Link[i].size / 3, Link[i].size * 2 / 3, Link[i].size * 2 / 3);
+                        Context.beginPath();
+                        Context.moveTo(Link[i].x, Link[i].y);
+                        Context.lineWidth = 2;
+                        switch(i) {
+                            case 0: Context.lineTo(Link[i].x + Link[i].linkDir, Link[i].y + 100); break;
+                            case 1: Context.lineTo(Link[i].x + 100, Link[i].y + Link[i].linkDir); break;
+                            case 2: Context.lineTo(Link[i].x + Link[i].linkDir, Link[i].y - 100); break;
+                            case 3: Context.lineTo(Link[i].x - 100, Link[i].y + Link[i].linkDir); break;
+                        }
+                        Context.stroke();
+                        Context.closePath();
+                        Context.lineWidth = 1;
+                        
+                        for (var j = 0; j < Link[i].size; j++) {
+                            drawCircle(Link[i].x, Link[i].y, j, 0, Math.PI * 2, false);
+                            Context.globalAlpha -= 1 / Link[i].size;
+                        }
+                        Context.globalAlpha = 0.5;
+                        Context.fillStyle = "#000000"
+                        for (var j = 0; j < Link[i].size; j++) {
+                            drawRect(Link[i].x + Link[i].size * Link[i].effectx[j], Link[i].y + Link[i].size * Link[i].effecty[j], Link[i].size / 2, Link[i].size / 4, true);
+                        }
+                        Context.globalAlpha = 1;
+                        Context.strokeStyle = "#FFFFFF"
+                        Link[i].active = true;
+                    }
                 }
             }
 
             //Bullets
             var ball;
             Context.fillStyle = "#FF0000";
-            for (var i = 0; i < Pbullet.length; i++)
-            {
+            for (var i = 0; i < Pbullet.length; i++) {
                 ball = Pbullet[i];
                 goReflectbullet(ball);
                 drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
             }
-            for (var i = 0; i < Ebullet.length; i++)
-            {
+            for (var i = 0; i < Ebullet.length; i++) {
                 ball = Ebullet[i];
-                Context.fillStyle = "#FFFFFF";
-                if (ball.bulletType == "sin")
-                {
+                Context.fillStyle = "#00EEFF";
+                if (ball.bulletType == "sin") {
                     goSinbullet(ball);
                     drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);
                 }
@@ -261,7 +290,7 @@
                     goBigbullet(ball);
                     drawCircle(ball.x, ball.y, ball.size, 0, Math.PI * 2, true);    //평균의 6~8배 크기
                     Context.fillStyle = "#000000";
-                    drawCircle(ball.x, ball.y, ball.size * 0.8, 0, Math.PI * 2, true);
+                    drawCircle(ball.x, ball.y, ball.size * 0.9, 0, Math.PI * 2, true);
                 }
                 else if (ball.bulletType == "lazer") {
                     goLazerbullet(ball);
@@ -269,45 +298,8 @@
                 }
             }
 
-            //walls
-            Context.strokeStyle = "#FFFFFF";
-            Context.fillStyle = "#FFFFFF";
-            for (var i = 0; i < Objects.length; i++)
-            {
-                var wall = Objects[i];
-                drawRect(wall.x, wall.y, wall.w, wall.h, true);
-            }
-            Context.globalAlpha = 1;
-            Context.strokeStyle = "#000000";
-            var edge = 2;
-            Context.strokeRect(edge, edge, Canvas.width - 2 * edge, Canvas.height - 2 * edge);
-            Context.strokeRect(Canvas.width * tapCorrection - edge, Canvas.height * tapCorrection - edge, Canvas.width * tapCorrection * 13 + 2 * edge, Canvas.height * tapCorrection * 13 + 2 * edge);
-            Context.strokeStyle = "#FFFFFF";
-
-            //Enemy
-            Context.fillStyle = "#FFFFFF";
-            for (var i = 0; i < Taps[System.CurrentTap].Enemy.length; i++)
-            {
-                var enemy = Taps[System.CurrentTap].Enemy[i];
-                console.log(enemy);
-                switch (enemy.type)
-                {
-                    case "square1": drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
-                    case "square2": drawRhombus(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
-                    case "square3": /*drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true);*/ break;
-                    case "square4": /*drawRhombus(enemy.x, enemy.y, enemy.w, enemy.h, true);*/ break;
-                    case "square5": { /*drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true);*/ drawTri(enemy.x, enemy.y, enemy.w, enemy.h, true); } break;
-                    case "squareBoss": //drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
-                    case "squareBu": //drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
-                    default: break;
-                }
-            }
-
             //Player
-            if (Player.active == 0)
-            {
-                Context.globalAlpha = 0.5;
-            }
+            if (Player.active == 0) { Context.globalAlpha = 0.5; }
             if (Player.dx != 0 || Player.dy != 0) {
                 if (Player.dx > 1) Player.dx = 1;
                 if (Player.dy < -1) Player.dx = -1;
@@ -320,14 +312,12 @@
                 Player.x += dx * Player.speed * deltaTime;
                 Player.y += dy * Player.speed * deltaTime;
             }
-            //Context.fillStyle = "#50bcdf";
             Context.fillStyle = "#000000";
             drawCircle(Player.x, Player.y, Player.size, 0, Math.PI * 2, true);
-            Context.fillStyle = "#000000";
             Context.strokeStyle = "#FF0000";
             drawCircle(Player.x, Player.y, Player.size, 0, Math.PI * 2, false);
 
-            //Cursor & Triangle
+            //Triangle & Cursor
             Context.fillStyle = "#FF0000";
             Player.angle = -Math.atan2((Cursor.y - Player.y), (Cursor.x - Player.x));
             var distPT = Player.size + Cursor.size;
@@ -335,8 +325,7 @@
             Context.moveTo(Player.x + distPT * Math.cos(Player.angle), Player.y - distPT * Math.sin(Player.angle));
             Context.lineTo(Player.x + (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.cos(Player.angle) + (-Cursor.size / 2) * Math.sin(Player.angle), Player.y - (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.sin(Player.angle) + (-Cursor.size / 2) * Math.cos(Player.angle));
             Context.lineTo(Player.x + (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.cos(Player.angle) + (Cursor.size / 2) * Math.sin(Player.angle), Player.y - (distPT - Cursor.size * Math.sqrt(3) / 2) * Math.sin(Player.angle) + (Cursor.size / 2) * Math.cos(Player.angle));
-            Context.closePath();
-            Context.fill();
+            Context.closePath(); Context.fill();
 
             Context.globalAlpha = 1;
             Context.fillStyle = "#FFFFFF";
@@ -348,58 +337,120 @@
             Context.stroke();
             Context.moveTo(Cursor.x, Cursor.y + cLeng);
             Context.lineTo(Cursor.x, Cursor.y - cLeng);
-            Context.stroke();
-            Context.closePath();
+            Context.stroke(); Context.closePath();
+
+            //Enemy
+            for (var i = 0; i < Taps[System.CurrentTap].Enemy.length; i++) {
+                var enemy = Taps[System.CurrentTap].Enemy[i];
+                Context.fillStyle = "#000000";
+                Context.strokeStyle = "rgb(" + (enemy.mhp - enemy.heart) / enemy.mhp * 255 + "," + enemy.heart / enemy.mhp * 255 + "," + enemy.heart / enemy.mhp * 255 + ")";
+                Context.globalAlpha = 2;
+                switch (enemy.enemyType) {
+                    case "square1": drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); drawRect(enemy.x, enemy.y, enemy.w, enemy.h, false); break;
+                    case "square2": drawRhombus(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
+                    case "square3": drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
+                    case "square4": drawRhombus(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
+                    case "square5": { drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); drawTri(enemy.x - enemy.w/2, enemy.y-enemy.h/2, enemy.w, enemy.h, true); } break;
+                    case "squareBoss": {
+                        var gap = 2;
+                        Context.fillStyle = "#000000";
+                        Context.strokeStyle = "#000000";
+                        Context.lineWidth = 5;
+                        if (enemy.parts[0] == 1) { Context.beginPath(); Context.moveTo(enemy.x, enemy.y); Context.lineTo(enemy.x - enemy.leg, enemy.y - enemy.leg); Context.closePath(); Context.stroke(); }
+                        if (enemy.parts[1] == 1) { Context.beginPath(); Context.moveTo(enemy.x, enemy.y); Context.lineTo(enemy.x - enemy.leg, enemy.y); Context.closePath(); Context.stroke(); }
+                        if (enemy.parts[2] == 1) { Context.beginPath(); Context.moveTo(enemy.x, enemy.y); Context.lineTo(enemy.x - enemy.leg, enemy.y + enemy.leg); Context.closePath(); Context.stroke(); }
+                        if (enemy.parts[3] == 1) { Context.beginPath(); Context.moveTo(enemy.x, enemy.y); Context.lineTo(enemy.x, enemy.y - enemy.h); Context.closePath(); Context.stroke(); }
+                        if (enemy.parts[4] == 1) { Context.beginPath(); Context.moveTo(enemy.x, enemy.y); Context.lineTo(enemy.x, enemy.y + enemy.h); Context.closePath(); Context.stroke(); }
+                        if (enemy.parts[5] == 1) { Context.beginPath(); Context.moveTo(enemy.x, enemy.y); Context.lineTo(enemy.x + enemy.leg, enemy.y - enemy.leg); Context.closePath(); Context.stroke(); }
+                        if (enemy.parts[6] == 1) { Context.beginPath(); Context.moveTo(enemy.x, enemy.y); Context.lineTo(enemy.x + enemy.leg, enemy.y); Context.closePath(); Context.stroke(); }
+                        if (enemy.parts[7] == 1) { Context.beginPath(); Context.moveTo(enemy.x, enemy.y); Context.lineTo(enemy.x + enemy.leg, enemy.y + enemy.leg); Context.closePath(); Context.stroke(); }
+                        Context.fillStyle = "#FFFFFF";
+                        Context.strokeStyle = "#000000";
+
+                        if (enemy.parts[1] == 0) {
+                            Context.lineWidth = 5;
+                            Context.beginPath(); Context.moveTo(enemy.x, enemy.y); Context.lineTo(enemy.x - enemy.leg - enemy.w / 3, enemy.y); Context.closePath(); Context.stroke();
+                            Context.lineWidth = 1;
+                            drawRect(enemy.x - enemy.leg - enemy.w / 3, enemy.y, enemy.w / 3, enemy.h, true);
+                            drawRect(enemy.x - enemy.leg - enemy.w / 3, enemy.y, enemy.w / 3 - gap, enemy.h - gap, false);
+                        }
+                        if (enemy.parts[3] == 0) {
+                            Context.lineWidth = 5;
+                            Context.beginPath(); Context.moveTo(enemy.x, enemy.y); Context.lineTo(enemy.x, enemy.y - enemy.leg - enemy.h / 3); Context.closePath(); Context.stroke();
+                            Context.lineWidth = 1;
+                            drawRect(enemy.x, enemy.y - enemy.leg - enemy.h / 3, enemy.w, enemy.h / 3, true);
+                            drawRect(enemy.x, enemy.y - enemy.leg - enemy.h / 3, enemy.w - gap, enemy.h / 3 - gap, false);
+                        }
+                        if (enemy.parts[4] == 0) {
+                            Context.lineWidth = 5;
+                            Context.beginPath(); Context.moveTo(enemy.x, enemy.y); Context.lineTo(enemy.x, enemy.y + enemy.leg + enemy.h / 3); Context.closePath(); Context.stroke();
+                            Context.lineWidth = 1;
+                            drawRect(enemy.x, enemy.y + enemy.leg + enemy.h / 3, enemy.w, enemy.h / 3, true);
+                            drawRect(enemy.x, enemy.y + enemy.leg + enemy.h / 3, enemy.w - gap, enemy.h / 3 - gap, false);
+                        }
+                        if (enemy.parts[6] == 0) {
+                            Context.lineWidth = 5;
+                            Context.beginPath(); Context.moveTo(enemy.x, enemy.y); Context.lineTo(enemy.x + enemy.leg + enemy.w / 3, enemy.y); Context.closePath(); Context.stroke();
+                            Context.lineWidth = 1;
+                            drawRect(enemy.x + enemy.leg + enemy.w / 3, enemy.y, enemy.w / 3, enemy.h, true);
+                            drawRect(enemy.x + enemy.leg + enemy.w / 3, enemy.y, enemy.w / 3 - gap, enemy.h - gap, false);
+                        }
+
+                        Context.lineWidth = 1;
+                        drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true);
+                        drawRect(enemy.x, enemy.y, enemy.w - gap, enemy.h - gap, false);
+                        //Context.strokeStyle = "#00EEFF";
+                        //drawRect(enemy.x, enemy.y, enemy.w, enemy.h, false);
+                    } break;
+                    case "squarePart": {
+                        var gap = 2;
+                        Context.fillStyle = "#000000";
+                        Context.strokeStyle = "#FFFFFF";
+                        drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true);
+                        drawRect(enemy.x, enemy.y, enemy.w - gap, enemy.h - gap, false);
+                    } break;
+                    case "squareBu": drawRect(enemy.x, enemy.y, enemy.w, enemy.h, true); break;
+                }
+            }
 
             //map
             Context.globalAlpha = 0.5;
             Context.fillStyle = "#555555";
+            Context.strokeStyle = "#FFFFFF";
             var miniMap = { x: 10, y: 10, w: 150, h: 150, size: 10 };
             Context.fillRect(miniMap.x, miniMap.y, miniMap.w, miniMap.h);
-            for (var i = 0; i < Taps.length; i++)
-            {
+            Context.globalAlpha = 0.9;
+            Context.lineWidth = 0.8;
+            for (var i = 0; i < Taps.length; i++) {
                 if (Taps[i].x > 3 || Taps[i].x < -3 || Taps[i].y > 3 || Taps[i].y < -3) continue;
-                if (Taps[i].clear == 0) continue;
-                Context.globalAlpha = 0.9;
-                Context.lineWidth = 0.8;
-                Context.strokeStyle = "#FFFFFF";
-                for (var j = 0; j < 4; j++)
-                {
-                    if (Taps[i].Links[j] != -1)
-                    {
+                if (i != System.CurrentTap && Taps[i].clear == 0) continue;
+                for (var j = 0; j < 4; j++) {
+                    if (Taps[i].Links[j] != -1) {
                         Context.beginPath();
                         Context.moveTo(miniMap.x + miniMap.w / 2 + Taps[i].x * 2 * miniMap.size, miniMap.y + miniMap.h / 2 + Taps[i].y * 2 * miniMap.size);
-                        switch (j)
-                        {
+                        switch (j) {
                             case 0: Context.lineTo(miniMap.x + miniMap.w / 2 + Taps[i].x * 2 * miniMap.size, miniMap.y + miniMap.h / 2 + Taps[i].y * 2 * miniMap.size + miniMap.size); break;
                             case 1: Context.lineTo(miniMap.x + miniMap.w / 2 + Taps[i].x * 2 * miniMap.size + miniMap.size, miniMap.y + miniMap.h / 2 + Taps[i].y * 2 * miniMap.size); break;
                             case 2: Context.lineTo(miniMap.x + miniMap.w / 2 + Taps[i].x * 2 * miniMap.size, miniMap.y + miniMap.h / 2 + Taps[i].y * 2 * miniMap.size - miniMap.size); break;
                             case 3: Context.lineTo(miniMap.x + miniMap.w / 2 + Taps[i].x * 2 * miniMap.size - miniMap.size, miniMap.y + miniMap.h / 2 + Taps[i].y * 2 * miniMap.size); break;
                         }
-                        Context.stroke();
-                        Context.closePath();
+                        Context.stroke(); Context.closePath();
                     }
                 }
-                Context.globalAlpha = 0.9;
-                if (Taps[i].TapType == "Start") { Context.fillStyle = "#50bcdf"; }
-                else { Context.fillStyle = "#FFFFFF"; }
                 if (i == System.CurrentTap) { Context.fillStyle = "#FF0000"; }
-
-                if (Taps[i].TapType == "Boss")
-                {
+                else if (Taps[i].TapType == "Start") { Context.fillStyle = "#50bcdf"; }
+                else { Context.fillStyle = "#FFFFFF"; }
+                if (Taps[i].TapType == "Boss") {
                     Context.fillRect(miniMap.x + miniMap.w / 2 - miniMap.size / 2 + Taps[i].x * 2 * miniMap.size, miniMap.y + miniMap.h / 2 - miniMap.size / 2 + Taps[i].y * 2 * miniMap.size, miniMap.size, miniMap.size);
                 }
-                else
-                {
+                else {
                     Context.fillRect(miniMap.x + miniMap.w / 2 - miniMap.size * 1 / 3 + Taps[i].x * 2 * miniMap.size, miniMap.y + miniMap.h / 2 - miniMap.size * 1 / 3 + Taps[i].y * 2 * miniMap.size, miniMap.size * 2 / 3, miniMap.size * 2 / 3);
                 }
             }
             Context.lineWidth = 1;
             Context.globalAlpha = 1;
-            Context.fillStyle = "#FFFFFF";
         }
-        function moveToOtherTap(i)
-        {
+        function moveToOtherTap(i) {
             //miniMap set
             System.CurrentTap = Taps[System.CurrentTap].Links[i];
             for (var j = 0; j < Taps.length; j++) {
@@ -422,7 +473,6 @@
                 var ball = Pbullet[0];
                 Pbullet.pop(ball);
             }
-
             //move Player
             if (i == 0 || i == 2) {
                 if (Player.y >= 300) { Player.y = 300 - (Player.y - 300) + 10; }
@@ -432,18 +482,28 @@
                 if (Player.x >= 400) { Player.x = 400 - (Player.x - 400) + 10; }
                 else if (Player.x < 400) { Player.x = 400 - (Player.x - 400) - 10; }
             }
+
+            //Link effect
+            for (var j = 0; j < 4; j++) {
+                for (var i = 0; i < 15; i++) {
+                    Link[j].effectx.pop();
+                    Link[j].effecty.pop();
+                }
+                for (var i = 0; i < 15; i++) {
+                    Link[j].effectx.push(Math.random() * 2.5 - 1.25);
+                    Link[j].effecty.push(Math.random() * 1.5 - 0.75);
+                }
+                Link[j].linkDir = Math.random() * 30 - 15;
+            }
         }
         var wallCheck = { up: 0, down: 0, left: 0, right: 0, cnt: 0 };
-        function collision()
-        {
+        function collision() {
             //Player and Wall
             var u, d, l, r;
             u = d = l = r = 0;
             wallCheck.cnt = 0;
-            for (var i = 0; i < Objects.length; i++)
-            {
-                switch (collisionCirRec(Player, Objects[i]))
-                {
+            for (var i = 0; i < Objects.length; i++) {
+                switch (collisionCirRec(Player, Objects[i])) {
                     case "UU": if (Player.dy == 1) u++; break;
                     case "DD": if (Player.dy == -1) d++; break;
                     case "LL": if (Player.dx == 1) l++; break;
@@ -460,14 +520,10 @@
             if (l != 0 && Player.dx == 1) { Player.dx = -Player.dx; }
             if (r != 0 && Player.dx == -1) { Player.dx = -Player.dx; }
             if (u == 0 && d == 0) {
-                if (wallCheck.up != 0 || wallCheck.down != 0) {
-                    Player.dy = 0;
-                }
+                if (wallCheck.up != 0 || wallCheck.down != 0) { Player.dy = 0; }
             }
             if (l == 0 && r == 0) {
-                if (wallCheck.left != 0 || wallCheck.right != 0) {
-                    Player.dx = 0;
-                }
+                if (wallCheck.left != 0 || wallCheck.right != 0) { Player.dx = 0; }
             }
             wallCheck.up = u;
             wallCheck.down = d;
@@ -475,55 +531,85 @@
             wallCheck.right = r;
 
             //Player and EBullet
-            for (var i = 0; i < Ebullet.length; i++)
-            {
-                if (collisionCirCir(Player, Ebullet[i]))
-                {
+            for (var i = 0; i < Ebullet.length; i++) {
+                if (collisionCirCir(Player, Ebullet[i])) {
                     playerDie();
                 }
             }
 
             //Player and Link
-            if (Taps[System.CurrentTap].Enemy.length == 0) Taps[System.CurrentTap].clear = 1;
-            if (Taps[System.CurrentTap].clear == 1)
-            {
+            if (Taps[System.CurrentTap].Enemy.length == 0) { Taps[System.CurrentTap].clear = 1; }
+            if (Taps[System.CurrentTap].clear == 1) {
                 for (var i = 0; i < 4; i++) {
                     if (Link[i].active == true && collisionCirCir(Player, Link[i])) {
                         moveToOtherTap(i);
                     }
                 }
             }
-            else
-            {
+            else {
                 for (var j = 0; j < Taps[System.CurrentTap].Enemy.length; j++) {
-                    //Player and Enemy
-                    if (collisionCirRec(Player, Taps[System.CurrentTap].Enemy[j]) != "OUT")
-                    {
-                        playerDie();
-                    }
-                    //Enemy and PBullet
-                    for (var i = 0; i < Pbullet.length; i++) {
-                        if (collisionCirRec(Pbullet[i], Taps[System.CurrentTap].Enemy[j])) {
-                            //Taps[System.CurrentTap].Enemy[j]
-                            //hp감소
-                            //사망 확인
-                            //사망 시 제거
-                            //아이템 떨구기
-                            //적 수 확인
-                            //클리어 판정
-                            //스코어
-                        }
-                    }
                     //Enemy and Wall
                     for (var i = 0; i < Objects.length; i++) {
                         if (collisionCirRec(Taps[System.CurrentTap].Enemy[j], Objects[i]) != 'OUT') {
                             //Taps[System.CurrentTap].Enemy[j]
                         }
                     }
+
+                    //Player and Enemy
+                    var enemy = Taps[System.CurrentTap].Enemy[j];
+                    if (enemy.enemyType == "square2" || enemy.enemyType == "square4") {
+                        if (collisionCirCir(Player, enemy) == true) {
+                            playerDie();
+                        }
+                    }
+                    else {
+                        if (collisionCirRec(Player, enemy) != "OUT") {
+                            playerDie();
+                        }
+                    }
+                    //Enemy and PBullet
+                    for (var i = 0; i < Pbullet.length; i++) {
+                        if (enemy.enemyType == "square2" || enemy.enemyType == "square4") {
+                            if (collisionCirCir(Pbullet[i], enemy) == true) {
+                                enemy.heart--;
+                                Pbullet.splice(i, 1);
+                            }
+                        }
+                        else {
+                            if (collisionCirRec(Pbullet[i], enemy) != "OUT") {
+                                enemy.heart--;
+                                Pbullet.splice(i, 1);
+                            }
+                        }
+
+                        if (enemy.heart <= 0) {
+                            if (enemy.enemyType == "squarePart") {
+                                if (enemy.x < enemy.parent.x) {
+                                    if (enemy.y < enemy.parent.y) { enemy.parent.parts[0] = 0; }
+                                    else if (enemy.y == enemy.parent.y) { enemy.parent.parts[1] = 0; }
+                                    else { enemy.parent.parts[2] = 0; }
+                                }
+                                else if (enemy.x == enemy.parent.x) {
+                                    if (enemy.y < enemy.parent.y) { enemy.parent.parts[3] = 0; }
+                                    else { enemy.parent.parts[4] = 0; }
+                                }
+                                else {
+                                    if (enemy.y < enemy.parent.y) { enemy.parent.parts[5] = 0; }
+                                    else if (enemy.y == enemy.parent.y) { enemy.parent.parts[6] = 0; }
+                                    else { enemy.parent.parts[7] = 0; }
+                                }
+                                
+                            }
+                            Taps[System.CurrentTap].Enemy.splice(Taps[System.CurrentTap].Enemy.findIndex(function (item) { return item === enemy }), 1);
+                            break;
+                            //아이템 떨구기
+                            //적 수 확인
+                            //클리어 판정
+                            //스코어
+                        }
+                    }
                 }
-
             }
-
             for (var j = 0; j < Objects.length; j++) {
                 //PBullet and Wall
                 for (var i = 0; i < Pbullet.length; i++) {
@@ -532,7 +618,6 @@
                         bulletWallCollision(Pbullet[i], Objects[j], col);
                     }
                 }
-
                 //EBullet and Wall
                 for (var i = 0; i < Ebullet.length; i++) {
                     var col = collisionCirRec(Ebullet[i], Objects[j]);
@@ -543,23 +628,15 @@
             }
         }
         function collisionCirCir(cir1, cir2) {
-            var dx;
-            var dy;
-            var dr;
-            dx = cir1.x - cir2.x;
-            dy = cir1.y - cir2.y;
-            dr = cir1.size + cir2.size;
-            dx = dx * dx;
-            dy = dy * dy;
-            dr = dr * dr;
-            if (dr > dx + dy)
-                return true;
+            var dx = cir1.x - cir2.x; dx = dx * dx;
+            var dy = cir1.y - cir2.y; dy = dy * dy;
+            var dr = cir1.size + cir2.size; dr = dr * dr;
+            if (dr > dx + dy) { return true; }
             return false;
         }
         function collisionCirRec(cir, rec) {
             var check = "OUT";
             var rect = { x: rec.x - rec.w / 2, y: rec.y - rec.h / 2, w: rec.w, h: rec.h };
-
             if (cir.x > rect.x && cir.y > rect.y && cir.x < rect.x + rect.w && cir.y < rect.y + rect.h) { check = "IN"; }
             else if ((rect.x - cir.x) * (rect.x - cir.x) + (rect.y - cir.y) * (rect.y - cir.y) < cir.size * cir.size) { check = "LU"; }
             else if ((rect.x + rect.w - cir.x) * (rect.x + rect.w - cir.x) + (rect.y - cir.y) * (rect.y - cir.y) < cir.size * cir.size) { check = "RU"; }
@@ -569,17 +646,15 @@
             else if (cir.x > rect.x && cir.x < rect.x + rect.w && rect.y - cir.y > 0 && rect.y - cir.y < cir.size) { check = "UU"; }
             else if (cir.y > rect.y && cir.y < rect.y + rect.h && cir.x - (rect.x + rect.w) > 0 && cir.x - (rect.x + rect.w) < cir.size) { check = "RR"; }
             else if (cir.x > rect.x && cir.x < rect.x + rect.w && cir.y - (rect.y + rect.h) < cir.size && cir.y - (rect.y + rect.h) > 0) { check = "DD"; }
-
             return check;
         }
-        function bulletWallCollision(ball, wall, dir)
-        {
+        function bulletWallCollision(ball, wall, dir) {
             if (ball.bulletType == "repl") {
                 if (dir == "RR" || dir == "LL") {
                     ball.angle = 180 - ball.angle;
                     ball.bs--;
                 }
-                if (dir == "UU" || dir == "DD") {
+                else if (dir == "UU" || dir == "DD") {
                     ball.angle = 360 - ball.angle;
                     ball.bs--;
                 }
@@ -596,12 +671,9 @@
                     deleteBullet(ball);
                 }
             }
-            else {
-                deleteBullet(ball);
-            }
+            else { deleteBullet(ball); }
         }
-        function deleteBullet(ball)
-        {
+        function deleteBullet(ball) {
             if (ball.type == "eBullet") {
                 Ebullet.splice(Ebullet.findIndex(function (item) { return item === ball }), 1);
             }
@@ -609,104 +681,86 @@
                 Pbullet.splice(Pbullet.findIndex(function (item) { return item === ball }), 1);
             }
         }
-        function createBullet(Bx, By, Btype, BbulletType, Bspeed, Bangle, Bsize, Bspacial)
-        {
+        function createBullet(Bx, By, Btype, BbulletType, Bspeed, Bangle, Bsize, Bspacial) {
             var tempBall = { type: Btype, bulletType: BbulletType, x: Bx, y: By, angle: Bangle, speed: Bspeed, size: Bsize, dx: 0, dy: 0, bs: Bspacial }
-            if (tempBall.bulletType == "sin")
-            {
+            if (tempBall.bulletType == "sin") {
                 tempBall.dx = Bx;
                 tempBall.dy = By;
             }
-            if (tempBall.x > Canvas.width || tempBall.x < 0 || tempBall.y > Canvas.height || tempBall.y < 0) {
-                return;
-            }
+            if (tempBall.x > Canvas.width || tempBall.x < 0 || tempBall.y > Canvas.height || tempBall.y < 0) { return; }
 
-            if (tempBall.type == "eBullet")
-            {
-                console.log(tempBall);
-                Ebullet.push(tempBall);
-            }
-            else if (tempBall.type == "pBullet") {
-                Pbullet.push(tempBall);
-            }
+            if (tempBall.type == "eBullet") { Ebullet.push(tempBall); }
+            else if (tempBall.type == "pBullet") { Pbullet.push(tempBall); }
         }
         function goReflectbullet(ball) {
             var radians = -ball.angle * Math.PI / 180;
             ball.dx = Math.cos(radians);
             ball.dy = Math.sin(radians);
-
             ball.x += ball.dx * ball.speed * deltaTime;
             ball.y += ball.dy * ball.speed * deltaTime;
-            if (ball.x > Canvas.width + ball.size || ball.x < -ball.size || ball.y > Canvas.height + ball.size || ball.y < -ball.size) {
-                deleteBullet(ball);
-            }
+            if (ball.x > Canvas.width + ball.size || ball.x < -ball.size || ball.y > Canvas.height + ball.size || ball.y < -ball.size) { deleteBullet(ball); }
         }
         function goBigbullet(ball) {
             var radians = -ball.angle * Math.PI / 180;
             ball.dx = Math.cos(radians);
             ball.dy = Math.sin(radians);
-
             ball.x += ball.dx * ball.speed * deltaTime;
             ball.y += ball.dy * ball.speed * deltaTime;
-            if (ball.x > Canvas.width + ball.size || ball.x < -ball.size || ball.y > Canvas.height + ball.size || ball.y < -ball.size) {
-                deleteBullet(ball);
-            }
+            if (ball.x > Canvas.width + ball.size || ball.x < -ball.size || ball.y > Canvas.height + ball.size || ball.y < -ball.size) { deleteBullet(ball); }
         }
-        function goSinbullet(ball)
-        {
-            ball.speed = 20;
+        function goSinbullet(ball) {
             var theta = -ball.angle;
             ball.x = ball.dx + ball.bs * Math.cos(theta * Math.PI / 180) - 10 * Math.sin(ball.bs * Math.PI / 180 * 5) * Math.sin(theta * Math.PI / 180);
             ball.y = ball.dy + ball.bs * Math.sin(theta * Math.PI / 180) + 10 * Math.sin(ball.bs * Math.PI / 180 * 5) * Math.cos(theta * Math.PI / 180);
             ball.bs += ball.speed * deltaTime;
-            if (ball.x > Canvas.width + ball.size || ball.x < -ball.size || ball.y > Canvas.height + ball.size || ball.y < -ball.size) {
-                deleteBullet(ball);
-            }
+            if (ball.x > Canvas.width + ball.size || ball.x < -ball.size || ball.y > Canvas.height + ball.size || ball.y < -ball.size) { deleteBullet(ball); }
         }
         function goLazerbullet(ball) {
             ball.x = ball.x + 1;
-            if (ball.x > Canvas.width + ball.size || ball.x < -ball.size || ball.y > Canvas.height + ball.size || ball.y < -ball.size) {
-                deleteBullet(ball);
-            }
+            if (ball.x > Canvas.width + ball.size || ball.x < -ball.size || ball.y > Canvas.height + ball.size || ball.y < -ball.size) { deleteBullet(ball); }
         }
 
-        function playerDie()
-        {
-            if (Player.active == 1)
-            {
+        function playerDie() {
+            if (Player.active == 1) {
                 Player.active = 0;
                 System.Life--;
-                if (System.Life < 0) {
-                    alert("gameover");
-                    //game over
-                }
-                else {
-                    setTimeout(respawn, 3000);
-                }
+                if (System.Life >= 0) { setTimeout(respawn, 3000); }
             }
         }
-        function respawn()
-        {
-            Player.active = 1;
-        }
-        function createWindow(Taps)
-        {
+        function respawn() { Player.active = 1; }
+        function createWindow(Taps) {
             createTap(Taps, 0, 0, -1);
             Taps[Taps.length - 1].TapType = "Boss";
-            for (var j = 0; j < Taps.length; j++) {
-                Taps[j].x = Taps[j].y = 0;
-            }
+            var boss = makeEne(6, 400, 300);
+            Taps[Taps.length - 1].Enemy.push(boss);
+            for (var i = 0; i < 8; i++) { boss.parts[i] = 1; }
+            var gap = 2;
+            var part = makeEne(7, boss.x - boss.w / 3 - gap, boss.y - boss.h / 3 - gap);
+            Taps[Taps.length - 1].Enemy.push(part); part.parent = boss;
+            part = makeEne(7, boss.x - boss.w / 3 - gap, boss.y);
+            Taps[Taps.length - 1].Enemy.push(part); part.parent = boss;
+            part = makeEne(7, boss.x - boss.w / 3 - gap, boss.y + boss.h / 3 + gap);
+            Taps[Taps.length - 1].Enemy.push(part); part.parent = boss;
+            part = makeEne(7, boss.x, boss.y - boss.h / 3 - gap);
+            Taps[Taps.length - 1].Enemy.push(part); part.parent = boss;
+            part = makeEne(7, boss.x, boss.y + boss.h / 3 + gap);
+            Taps[Taps.length - 1].Enemy.push(part); part.parent = boss;
+            part = makeEne(7, boss.x + boss.w / 3 + gap, boss.y - boss.h / 3 - gap);
+            Taps[Taps.length - 1].Enemy.push(part); part.parent = boss;
+            part = makeEne(7, boss.x + boss.w / 3 + gap, boss.y);
+            Taps[Taps.length - 1].Enemy.push(part); part.parent = boss;
+            part = makeEne(7, boss.x + boss.w / 3 + gap, boss.y + boss.h / 3 + gap);
+            Taps[Taps.length - 1].Enemy.push(part); part.parent = boss;
+            boss.w = boss.w / 3;
+            boss.h = boss.h / 3;
+            for (var j = 0; j < Taps.length; j++) { Taps[j].x = Taps[j].y = 0; }
             tapLocationSet(Taps, 0, 0, 0);
-            for (var i = 0; i < Taps.length; i++)
-            {
-                Taps[i].check = 0;
-            }
+            for (var i = 0; i < Taps.length; i++) { Taps[i].check = 0; }
         }
-        function createTap(Taps, i, parentDirection, parentNum)
-        {
+        function createTap(Taps, i, parentDirection, parentNum) {
             var tap;
             if (i == 0) {
-                tap = { type: "Tap", TapType: "Start", Links: new Array(4), Enemy: new Array(), clear: 1, check: 0, x: 0, y: 0 };
+                tap = { type: "Tap", TapType: "Start", Links: new Array(4), Enemy: new Array(), clear: 0, check: 0, x: 0, y: 0 };
                 Taps.push(tap);
                 tap.Links[0] = tap.Links[1] = tap.Links[2] = tap.Links[3] = -1;
                 tap.Links[parentDirection] = parentNum;
@@ -731,13 +785,11 @@
                         createTap(Taps, Taps.length, ((randDir + j) % 4 + 2) % 4, i);
                     }
                 }
-
-                for (var i = 1; i < 6; i++) {
+                for (var i = 1; i < 2; i++) {
                     tap.Enemy.push(makeEne(i, 100 * i, 100));
                 }
             }
-            else
-            {
+            else {
                 tap = { type: "Tap", TapType: "Normal", Links: new Array(4), Enemy: new Array(), clear: 0, check: 0, x: 0, y: 0 };
                 Taps.push(tap);
                 tap.Links[0] = tap.Links[1] = tap.Links[2] = tap.Links[3] = -1;
@@ -765,19 +817,16 @@
                             if (Taps[k].x == nx && Taps[k].y == ny) { c = true; }
                         }
                         if (c == true) { continue; }
-                        if (Math.random() < (Taps.length) / (System.TapSize * parentNum))
-                        {
+                        if (Math.random() < (Taps.length) / (System.TapSize * parentNum)) {
                             tap.Links[j] = Taps.length;
                             createTap(Taps, Taps.length, (j + 2) % 4, i);
-                            //var nTap = createTap(Taps, Taps.length);
                         }
                     }
                 }
             }
             return tap;
         }
-        function tapLocationSet(Taps, tapIdx, dx, dy)
-        {
+        function tapLocationSet(Taps, tapIdx, dx, dy) {
             if (tapIdx > Taps.length || tapIdx < 0) { return; }
             var tap = Taps[tapIdx];
             if (tap.check == 1) { return; }
@@ -794,39 +843,43 @@
         function makeEne(ty, x1, y1) {
             var mkene;
             var esize = 15;
-            if (ty == 1) {
-                mkene = { type: "square1", x: x1, y: y1, mSpeed: 20, aSpeed: 5, bullet: 1, heart: 20, w: esize, h: esize };
-            }
-            else if (ty == 2) {
-                mkene = { type: "square2", x: x1, y: y1, mSpeed: 24, aSpeed: 5, bullet: 1, heart: 16, w: esize, h: esize };
-            }
+            if (ty == 1)
+                mkene = { type: "enemy", enemyType: "square1", x: x1, y: y1, mSpeed: 20, aSpeed: 5, bullet: 1, heart: 20, mhp: 20, w: esize, h: esize, size: esize, angle: 0 };
+            else if (ty == 2)
+                mkene = { type: "enemy", enemyType: "square2", x: x1, y: y1, mSpeed: 24, aSpeed: 5, bullet: 1, heart: 16, mhp: 16, w: esize, h: esize, size: esize, angle: 0 };
             else if (ty == 3)
-                mkene = { type: "square3", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 2, heart: 80, w: esize * 12, h: esize * 12 };
+                mkene = { type: "enemy", enemyType: "square3", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 2, heart: 80, mhp: 80, w: esize * 12, h: esize * 12, size: esize * 12, angle: 0 };
             else if (ty == 4)
-                mkene = { type: "square4", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, w: esize * 4, h: esize * 4 };
+                mkene = { type: "enemy", enemyType: "square4", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, mhp: 40, w: esize * 4, h: esize * 4, size: esize * 4, angle: 0 };
             else if (ty == 5)
-                mkene = { type: "square5", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, w: esize * 4, h: esize * 4, ran: -1 };
-            console.log(mkene);
+                mkene = { type: "enemy", enemyType: "square5", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, mhp: 40, w: esize * 4, h: esize * 4, size: esize * 4, ran: -1, angle: 0 };
+            else if (ty == 6)
+                mkene = { type: "enemy", enemyType: "squareBoss", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, mhp: 40, w: esize * 9, h: esize * 9, size: esize * 9, ran: -1, angle: 0, parts: new Array(), leg: esize * 3 };
+            else if (ty == 7)
+                mkene = { type: "enemy", enemyType: "squarePart", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, mhp: 40, w: esize * 3, h: esize * 3, size: esize * 3, ran: -1, angle: 0, parent: null };
+            else if (ty == 8)
+                mkene = { type: "enemy", enemyType: "squareBu", x: x1, y: y1, mSpeed: 0, aSpeed: 10, bullet: 1, heart: 40, mhp: 40, w: esize * 3, h: esize * 3, size: esize * 3, ran: -1, angle: 0 };
+
             return mkene;
         }
         function addBullet() {
             for (var i = 0; i < Taps[System.CurrentTap].Enemy.length; i++) {
                 var enemy = Taps[System.CurrentTap].Enemy[i];
-                if (enemy.type == "square1") {
+                if (enemy.enemyType == "square1") {
                     var ang = 45;
                     for (var n = 0; n < 4; n++) {
                         createBullet(enemy.x, enemy.y, "eBullet", "repl", 100, ang, 3, 1);
                         ang += 90;
                     }
                 }
-                if (enemy.type == "square2") {
+                if (enemy.enemyType == "square2") {
                     var ang = 0;
                     for (var n = 0; n < 4; n++) {
                         createBullet(enemy.x, enemy.y, "eBullet", "sin", 30, ang, 3, 2);
                         ang += 90;
                     }
                 }
-                if (enemy.type == "square3") {
+                if (enemy.enemyType == "square3") {
                     var random = Math.floor(Math.random() * 4) + 1;
                     for (var n = 0; n < 10; n++) {
                         ////console.log(enemy.x + enemy.w / 2+n*3);
@@ -864,9 +917,7 @@
                     Enemy.y -= 0.1;
                 }
             }
-            else {
 
-            }
             if (Enemy.x <= 0)
                 Enemy.x = 0;
             if (Enemy.x + Enemy.w >= Canvas.width)
@@ -958,113 +1009,81 @@
 
         var attcking1, attcking2, slowMove;
         attcking1 = attcking2 = slowMove = 0;
-        function onKeyDownFunc(e)
-        {
+        function onKeyDownFunc(e) {
+            e.preventDefault();
             e.stopPropagation();
-            //alert(Player.dy);
-            if (e.keyCode == 87 && Player.dy > -1)   //W
-            {
+            if (e.keyCode == 87 && Player.dy > -1) {        //w
                 Player.dy--;
                 if (Player.dy == 0) setTimeout(onKeyDownFunc(e), 1);
             }
-            if (e.keyCode == 65 && Player.dx > -1)    //A
-            {
+            else if (e.keyCode == 65 && Player.dx > -1) {    //a
                 Player.dx--;
                 if (Player.dx == 0) setTimeout(onKeyDownFunc(e), 1);
             }
-            if (e.keyCode == 83 && Player.dy < 1)   //S
-            {
+            else if (e.keyCode == 83 && Player.dy < 1) {     //s
                 Player.dy++;
                 if (Player.dy == 0) setTimeout(onKeyDownFunc(e), 1);
             }
-            if (e.keyCode == 68 && Player.dx < 1)   //D
-            {
+            else if (e.keyCode == 68 && Player.dx < 1) {     //d
                 Player.dx++;
                 if (Player.dx == 0) setTimeout(onKeyDownFunc(e), 1);
             }
-
-            if (e.keyCode == 32) {  //space
+            else if (e.keyCode == 32) {  //space
                 attcking1 = 1;
             }
-            if (e.keyCode == 16)    //shift
-            {
+            else if (e.keyCode == 16) {  //shift
                 slowMove = 1;
             }
-        }
-        function onKeyPressFunc(e) {
-            e.stopPropagation();
         }
         function onKeyUpFunc(e) {
             e.preventDefault();
             e.stopPropagation();
-            //alert(e.keyCode);
-            if (e.keyCode == 87 && Player.dy < 1)   //W
-            {
+            if (e.keyCode == 87 && Player.dy < 1) {         //w
                 Player.dy = 0;
             }
-            if (e.keyCode == 65 && Player.dx < 1)    //A
-            {
+            else if (e.keyCode == 65 && Player.dx < 1) {    //a
                 Player.dx = 0;
             }
-            if (e.keyCode == 83 && Player.dy > -1)   //S
-            {
+            else if (e.keyCode == 83 && Player.dy > -1) {   //s
                 Player.dy = 0;
             }
-            if (e.keyCode == 68 && Player.dx > -1)   //D
-            {
+            else if (e.keyCode == 68 && Player.dx > -1) {   //d
                 Player.dx = 0;
             }
-
-            if (e.keyCode == 32) {  //space
+            else if (e.keyCode == 32) {  //space
                 attcking1 = 0;
             }
-            if (e.keyCode == 16)    //shift
-            {
+            else if (e.keyCode == 16) {  //shift
                 slowMove = 0;
             }
         }
         function onMouseMoveFunc(e) {
             e.preventDefault();
             e.stopPropagation();
-
             var rect = Canvas.getBoundingClientRect();
             Cursor.x = e.clientX - rect.left;
             Cursor.y = e.clientY - rect.top;
         }
         function onMouseDownFunc(e) {
-            if (e.button == 0)
-            {
-                attcking2 = 1;
-            }
+            if (e.button == 0) { attcking2 = 1; }
         }
-        function onMouseUpFunc(e)
-        {
-            if (e.button == 0) {
-                attcking2 = 0;
-            }
+        function onMouseUpFunc(e) {
+            if (e.button == 0) { attcking2 = 0; }
         }
 
         function drawCircle(x, y, r, sa, ea, f) {
             Context.beginPath();
             Context.arc(x, y, r, sa, ea, true);
             Context.closePath();
-            if (f == true) {
-                Context.fill();
-            }
-            else {
-                Context.stroke();
-            }
+            if (f == true) { Context.fill(); }
+            else { Context.stroke(); }
         }
         function drawRect(x, y, w, h, f) {
             Context.beginPath();
             Context.rect(x - w / 2, y - h / 2, w, h);
             Context.closePath();
-            if (f == true) {
-                Context.fill();
-            }
-            else {
-                Context.stroke();
-            }
+            if (f == true) { Context.fill(); }
+            else { Context.stroke(); }
         }
         function drawRhombus(x, y, w, h, f) {
             Context.setTransform(1, 0, 0, 1, 0, 0);
@@ -1084,24 +1103,18 @@
                 Context.lineTo(x + w1 + w1 * i, y);
                 Context.closePath();
                 Context.fill();
-            }
-            for (var i = 0; i < 4; i++) {
                 Context.beginPath();
                 Context.moveTo(x + w1 * i, y + h);
                 Context.lineTo(x + w1 / 2 + w1 * i, y + h1 / 2 * r2 + h);
                 Context.lineTo(x + w1 + w1 * i, y + h);
                 Context.closePath();
                 Context.fill();
-            }
-            for (var i = 0; i < 4; i++) {
                 Context.beginPath();
                 Context.moveTo(x, y + h1 * i);
                 Context.lineTo(x - (w1 / 2 * r2), y + h1 / 2 + h1 * i);
                 Context.lineTo(x, y + h1 * i + h1);
                 Context.closePath();
                 Context.fill();
-            }
-            for (var i = 0; i < 4; i++) {
                 Context.beginPath();
                 Context.moveTo(x + w, y + h1 * i);
                 Context.lineTo(x + w + w1 / 2 * r2, y + h1 / 2 + h1 * i);
@@ -1117,39 +1130,33 @@
         var Context = Canvas.getContext('2d');
         document.getElementById('container').style.left = window.innerWidth / 2 - 400 + 'px';
         Context.globalCompositeOperation = "source-over";
-
         Context.fillStyle = '#FFFFFF';
         Context.strokeStyle = '#000000';
         Context.font = "48px Product Sans";
 
-        //setTimeout(overDraw, 1 / 60);
         setTimeout(startGameOver, 1 / 60);
         var size = 0;
         function startGameOver() {
             Context.beginPath();
             Context.arc(px, py, size, 0, Math.PI * 2);
-            Context.fill();
-            Context.closePath();
+            Context.fill(); Context.closePath();
             size += 1.5;
             if (size > 1000) {
                 size = 100;
                 setTimeout(overDraw, 1 / 60);
             }
-            else {
-                setTimeout(startGameOver, 1 / 60);
-            }
+            else { setTimeout(startGameOver, 1 / 60); }
         }
-
 
         var theta = 0;
         var start = 0;
         var click = 0;
         function overDraw() {
-            Context.clearRect(0, 0, Canvas.width, Canvas.height);
             Canvas.style.backgroundColor = "white";
-            Context.font = "48px Product Sans";
+            Context.clearRect(0, 0, Canvas.width, Canvas.height);
             Context.strokeRect(3, 3, Canvas.width - 6, Canvas.height - 6);
             Context.fillStyle = '#000000';
+            Context.font = "48px Product Sans";
             Context.globalCompositeOperation = "source-over";
             var s = size;
             var t = theta;
@@ -1173,24 +1180,18 @@
                 Context.translate(x + Math.cos(Math.PI / 180 * (135 - t)) * s * Math.sqrt(2) / 2, y + Math.sin(Math.PI / 180 * (135 - t)) * s * Math.sqrt(2) / 2);
                 Context.rotate(-t * Math.PI / 180);
                 Context.strokeRect(0, 0, s, -s);
-                //Context.fillRect(0, 0, s, -s);
                 Context.setTransform(1, 0, 0, 1, 0, 0);
             }
 
             Context.globalCompositeOperation = "xor";
-            Context.fillStyle = '#000000';
             Context.fillText("Game", 330, 180);
             Context.fillText("Over.", 330, 230);
             Context.font = "24px Product Sans";
             Context.fillText("Your_Score: [" + pscore + "]", 10, 540);
             Context.fillText("Press_F5_To_Restart_The_Game", 10, 580);
             Context.globalCompositeOperation = "source-over";
-            if (s < 1000) {
-                theta += 0.00025 * s;
-            }
-            else {
-                theta += 0.00025 * 1000;
-            }
+            if (s < 1000) { theta += 0.00025 * s; }
+            else { theta += 0.00025 * 1000; }
 
             if (s > -256) { setTimeout(overDraw, 1 / 60); }
             else { size = 0; start = 1; }
