@@ -88,7 +88,7 @@
             /*for (var i = 1; i < 6; i++) {
                 makeEne(2, 100 * i, 100);
             }*/
-            makeEne(1, 200, 200);
+            makeEne(5, 200, 200);
             setInterval(addBullet, 5000);
             //addBullet();
             setInterval(update, deltaTime);
@@ -387,12 +387,13 @@
                 var y1 = Enemy.y - Player.y;
                 var i = Math.sqrt(x1 * x1 + y1 * y1);
                 var random = Math.floor(Math.random() * 4) + 1;
-                if (i >= 100&&Enemy.rand==-1) {
+                console.log(Enemy.rand);
+                if (i <= 100&&Enemy.rand==-1) {
                     //console.log("ag");
                     var siny = -y1 / i * 0.5;
                     var cosy = -x1 / i * 0.5;
-                    Enemy.x += cosy;
-                    Enemy.y += siny;
+                    Enemy.x -= cosy;
+                    Enemy.y -= siny;
                 }
                 else 
                 {
@@ -431,51 +432,39 @@
             function emoving3(Enemy) {
                 var random = Math.floor(Math.random() * 2) + 1;
                 //console.log(Enemy.cool);
-                if (Enemy.rand == 0) {
-                    Enemies.cool++;
-                    if (Enemy.cool == 200) {
-                        if(random==1)
-                        {
-                            if(Enemy.x<Player.x)
-                            {
+                //console.log("hh");
+                console.log(Enemy.rand);
+                if (Enemy.rand == 9) {
+                    Enemy.cool++;
+                    if (Enemy.cool >= 200) {
+                        Enemy.cool = 0;
+                        Enemy.rand = -1;
+                    }
+                }
+                else if (Enemy.rand == 0) {
+                    Enemy.cool++;
+                    Enemy.dx = Player.x;
+                    Enemy.dy = Player.y;
+                    if (Enemy.cool >= 200) {
+                        if (random == 1) {
+                            if (Enemy.x < Player.x) {
                                 Enemy.rand = 5;
                             }
-                            else
-                            {
+                            else {
                                 Enemy.rand = 6;
                             }
                         }
-                        else{
-                            if(Enemy.y<Player.y)
-                            {
+                        else {
+                            if (Enemy.y < Player.y) {
                                 Enemy.rand = 7;
                             }
-                            else
-                            {
+                            else {
                                 Enemy.rand = 8;
                             }
                         }
                     }
-                    else if(Enemy.cool>200)
-                    {
-                        if (Enemy.x - (Enemy.w / 8 * Math.sqrt(2)) <= 0) {
-                            Enemy.x += 1;
-                        }
-                        if (Enemy.x + (Enemy.w / 8 * Math.sqrt(2)) + Enemy.w >= Canvas.width) {
-                            Enemy.x -= 1;
-                        }
-                        if (Enemy.y - (Enemy.h / 8 * Math.sqrt(2)) <= 0) {
-                            Enemy.y += 1;
-                        }
-                        if (Enemy.y + (Enemy.h / 8 * Math.sqrt(2)) + Enemy.h >= Canvas.height) {
-                            Enemy.y -= 1;
-                        }
-                    }
                 }
-                if (Enemy.rand == 5 && Enemy.rand == 6) {
-
-                }
-                if (Enemy.rand == -1) {
+                else if (Enemy.rand == -1) {
                     if (random == 1) {
                         if (Player.x >= Enemy.x + Enemy.w / 2)
                             Enemy.rand = 2;
@@ -489,7 +478,7 @@
                             Enemy.rand = 3;
                     }
                 }
-                if (Enemy.rand == 1) {
+                else if (Enemy.rand == 1) {
                     Enemy.x -= 1;
                 }
                 else if (Enemy.rand == 2) {
@@ -501,34 +490,78 @@
                 else if (Enemy.rand == 4) {
                     Enemy.y += 1;
                 }
-                if (Enemy.x - (Enemy.w / 8 * Math.sqrt(2)) <= 0) {
-                    Enemy.rand = 0
-                    Enemy.x += 0.1;
-                    Enemy.cool++;
-                    Enemy.dx = Player.x;
-                    Enemy.dy = Player.y;
+                else if (Enemy.rand == 5) {
+                    Enemy.x += 1;
                 }
-                if (Enemy.x + (Enemy.w / 8 * Math.sqrt(2)) + Enemy.w >= Canvas.width) {
-                    Enemy.rand = 0;
-                    Enemy.x -= 0.1;
-                    Enemy.cool++;
-                    Enemy.dx = Player.x;
-                    Enemy.dy = Player.y;
+                else if (Enemy.rand == 6) {
+                    Enemy.x -= 1;
                 }
-                if (Enemy.y - (Enemy.h / 8 * Math.sqrt(2)) <= 0) {
-                    Enemy.rand = 0;
-                    Enemy.y += 0.1;
-                    Enemy.cool++;
-                    Enemy.dx = Player.x;
-                    Enemy.dy = Player.y;
+                else if (Enemy.rand == 7) {
+                    Enemy.y += 1;
                 }
-                if (Enemy.y + (Enemy.h / 8 * Math.sqrt(2)) + Enemy.h >= Canvas.height) {
-                    Enemy.rand = 0;
-                    Enemy.y -= 0.1;
-                    Enemy.cool++;
-                    Enemy.dx = Player.x;
-                    Enemy.dy = Player.y;
+                else if (Enemy.rand == 8) {
+                    Enemy.y -= 1;
                 }
+                if (Enemy.rand >= 5 && Enemy.rand <= 8) {
+                    if (Enemy.rand == 5) {
+                        if (Enemy.x >= Enemy.dx) {
+                            Enemy.cool = 0;
+                            Enemy.rand = 9;
+                        }
+                    }
+                    if (Enemy.rand == 6) {
+                        if (Enemy.x <= Enemy.dx) {
+                            Enemy.cool = 0;
+                            Enemy.rand = 9;
+                        }
+                    }
+                    if (Enemy.rand == 7) {
+                        if (Enemy.y >= Enemy.dy) {
+                            Enemy.cool = 0;
+                            Enemy.rand = 9;
+                        }
+                    }
+                    if (Enemy.rand == 8) {
+                        if (Enemy.y <= Enemy.dy) {
+                            Enemy.cool = 0;
+                            Enemy.rand = 9;
+                        }
+                    }
+                }
+                else {
+                    if (Enemy.x - (Enemy.w / 8 * Math.sqrt(2)) <= 0) {
+                        Enemy.rand = 0;
+                        Enemy.x += 0.1;
+                        //Enemy.cool++;
+                        Enemy.dx = Player.x;
+                        Enemy.dy = Player.y;
+
+                    }
+                    if (Enemy.x + (Enemy.w / 8 * Math.sqrt(2)) + Enemy.w >= Canvas.width) {
+                        Enemy.rand = 0;
+                        Enemy.x -= 0.1;
+                        //Enemy.cool++;
+                        Enemy.dx = Player.x;
+                        Enemy.dy = Player.y;
+
+                    }
+                    if (Enemy.y - (Enemy.h / 8 * Math.sqrt(2)) <= 0) {
+                        Enemy.rand = 0;
+                        Enemy.y += 0.1;
+                        //Enemy.cool++;
+                        Enemy.dx = Player.x;
+                        Enemy.dy = Player.y;
+
+                    }
+                    if (Enemy.y + (Enemy.h / 8 * Math.sqrt(2)) + Enemy.h >= Canvas.height) {
+                        Enemy.rand = 0;
+                        Enemy.y -= 0.1;
+                        //Enemy.cool++;
+                        Enemy.dx = Player.x;
+                        Enemy.dy = Player.y;
+                    }
+                }
+                
             }
             function createBullet(Bx, By, Btype, BbulletType, Bspeed, Bangle, Bsize, Bspacial) {
                 var tempBall = { type: Btype, bulletType: BbulletType, x: Bx, y: By, angle: Bangle, speed: Bspeed, size: Bsize, dx: 0, dy: 0, bs: Bspacial }
